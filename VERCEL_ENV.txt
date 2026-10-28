@@ -1,0 +1,13 @@
+DAN VAO VERCEL: Project > Settings > Environment Variables
+(Co the copy ca dong Key=Value, Vercel tu nhan - hoac nhap tung dong)
+
+VITE_BACKEND_URL=https://THAY-BANG-URL-RENDER-CUA-BAN.onrender.com
+VITE_FIREBASE_API_KEY=AIzaSyDOEM5QiCq90jBIijm3FY_LJij-VIMhSqI
+VITE_FIREBASE_AUTH_DOMAIN=muse-ai-11ba7.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=muse-ai-11ba7
+VITE_FIREBASE_APP_ID=1:758034636567:web:9a5919af93951d7a162152
+
+Luu y:
+- VITE_BACKEND_URL chi sua 1 lan duy nhat sau khi deploy backend len Render xong.
+- Sau khi them/sua env tren Vercel phai Redeploy (Deployments > ... > Redeploy) thi web moi nhan.
+- Tren Render, env la: CLIENT_URL = https://domain-vercel-cua-ban.vercel.app
