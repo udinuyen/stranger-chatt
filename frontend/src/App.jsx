@@ -5,13 +5,19 @@ import { auth, loginGoogle, loginGuest, logout } from "./firebase";
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
 const GENDER = { male: "♂ Nam", female: "♀ Nữ", other: "⚧ Khác" };
+const REGION = { bac: "Miền Bắc", trung: "Miền Trung", nam: "Miền Nam", "nuoc-ngoai": "Nước ngoài" };
+const THIS_YEAR = new Date().getFullYear();
 let socket;
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null); // {name,gender,location,avatar,isGuest}
+  const [profile, setProfile] = useState(null);
+  const [nickname, setNickname] = useState("");
   const [gender, setGender] = useState("other");
+  const [birthYear, setBirthYear] = useState(2000);
+  const [region, setRegion] = useState("bac");
   const [wantGender, setWantGender] = useState("all");
+  const [wantRegion, setWantRegion] = useState("all");
   const [location, setLocation] = useState("");
   const [status, setStatus] = useState("idle"); // idle | waiting | chatting
   const [partner, setPartner] = useState(null);
@@ -22,8 +28,6 @@ export default function App() {
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
-
-  // Tự đoán vị trí theo IP (người dùng sửa được) - không dùng GPS để tôn trọng riêng tư
   useEffect(() => {
     fetch("https://ipapi.co/json/").then(r => r.json())
       .then(d => setLocation([d.city, d.country_name].filter(Boolean).join(", "))).catch(() => {});
@@ -36,62 +40,104 @@ export default function App() {
     socket.on("receive_message", ({ text, from }) => setMsgs(m => [...m, { text, me: false, from }]));
     socket.on("partner_typing", ({ isTyping }) => setTyping(isTyping));
     socket.on("partner_left", () => { setStatus("idle"); setPartner(null); alert("Người lạ đã rời đi. Bấm Tìm để gặp người mới."); });
+    socket.on("report_ok", () => alert("Đã ghi nhận báo cáo. Người này sẽ không được ghép lại với bạn."));
+    socket.on("error_msg", (code) => { if (code === "underage") { alert("StrangerChat chỉ dành cho người từ 18 tuổi trở lên."); setProfile(null); setStatus("idle"); } });
     return () => socket.disconnect();
   }, [profile]);
 
-  const saveProfile = () => setProfile({
-    name: user.isAnonymous ? `Khách-${user.uid.slice(0, 5)}` : (user.displayName || "Người dùng"),
-    avatar: user.photoURL || `https://api.dicebear.com/9.x/thumbs/svg?seed=${user.uid}`,
-    isGuest: user.isAnonymous, gender, location: location || "Không rõ"
-  });
+  const myAge = THIS_YEAR - birthYear;
+  const saveProfile = () => {
+    if (myAge < 18) return alert("Bạn phải từ 18 tuổi trở lên để dùng StrangerChat.");
+    setProfile({
+      uid: user.uid,
+      name: nickname.trim() || (user.isAnonymous ? `Khách-${user.uid.slice(0, 5)}` : (user.displayName || "Người dùng")),
+      avatar: user.photoURL || `https://api.dicebear.com/9.x/thumbs/svg?seed=${user.uid}`,
+      isGuest: user.isAnonymous, gender, birthYear, region, location: location || ""
+    });
+  };
 
-  const find = () => { setStatus("waiting"); socket.emit("join_queue", { profile, wantGender }); };
+  const find = () => { setStatus("waiting"); socket.emit("join_queue", { profile, wantGender, wantRegion }); };
   const next = () => { setPartner(null); setMsgs([]); setStatus("waiting"); socket.emit("next"); };
   const stop = () => { socket.emit("leave_queue"); setStatus("idle"); setPartner(null); };
+  const report = () => { if (confirm("Báo cáo người này? Cuộc trò chuyện sẽ kết thúc và bạn không bị ghép lại với họ.")) { socket.emit("report_partner"); stop(); } };
   const send = () => { if (!text.trim()) return; setMsgs(m => [...m, { text, me: true }]); socket.emit("send_message", { text }); setText(""); };
 
+  // ---------- LANDING PAGE (chua dang nhap) ----------
   if (!user) return (
-    <div className="card">
-      <h1>💬 StrangerChat</h1><p>Chat ẩn danh với người lạ khắp nơi</p>
-      <button className="primary" onClick={loginGoogle}>Đăng nhập bằng Google</button>
-      <button onClick={loginGuest}>Vào với tư cách Khách</button>
-      <small>Khách: không cần mật khẩu, tên sẽ là Khách-xxxxx</small>
+    <div className="landing">
+      <div className="card">
+        <h1>💬 StrangerChat</h1>
+        <p className="hero">Một người lạ đang chờ nói chuyện với bạn</p>
+        <p>Trò chuyện ẩn danh với người thật đang online: tâm sự, chém gió hay chỉ để bớt buồn. Tin nhắn không lưu trên máy chủ — rời đi là xoá dấu vết.</p>
+        <button className="primary big" onClick={loginGoogle}>Đăng nhập bằng Google</button>
+        <button className="big" onClick={loginGuest}>Vào nhanh với tư cách Khách</button>
+        <small>Chỉ dành cho người từ 18 tuổi trở lên.</small>
+      </div>
+      <div className="card">
+        <h3>Cách hoạt động</h3>
+        <ol className="steps">
+          <li>Đăng nhập Google hoặc vào Khách, chọn biệt danh, giới tính, năm sinh và khu vực.</li>
+          <li>Bấm “Tìm người lạ” — hệ thống ghép bạn với một người đang online, không ghép lại người cũ.</li>
+          <li>Trò chuyện thoải mái. Muốn dừng thì Kết thúc, gặp người xấu thì Báo cáo (2 chạm).</li>
+        </ol>
+        <h3>An toàn là trên hết</h3>
+        <ul className="steps">
+          <li>Không cần số điện thoại hay tên thật, chỉ hiện những gì bạn chọn.</li>
+          <li>Không chia sẻ địa chỉ nhà, SĐT, mật khẩu cho người lạ.</li>
+          <li>Rời đi bất cứ lúc nào — người đó không được ghép lại với bạn.</li>
+        </ul>
+      </div>
     </div>
   );
 
+  // ---------- HO SO ----------
   if (!profile) return (
     <div className="card">
       <h2>Hồ sơ của bạn</h2>
       <img className="avatar" src={user.photoURL || `https://api.dicebear.com/9.x/thumbs/svg?seed=${user.uid}`} alt="" />
+      <label>Biệt danh (người lạ sẽ thấy tên này)
+        <input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="Để trống = dùng tên tài khoản" maxLength={40} /></label>
       <label>Giới tính của bạn
         <select value={gender} onChange={e => setGender(e.target.value)}>
           <option value="male">Nam</option><option value="female">Nữ</option><option value="other">Khác</option>
         </select></label>
-      <label>Vị trí (tự đoán theo mạng, sửa được)
+      <label>Năm sinh (chỉ hiện tuổi, không hiện năm sinh)
+        <input type="number" value={birthYear} onChange={e => setBirthYear(parseInt(e.target.value) || THIS_YEAR)} min="1950" max={THIS_YEAR} />
+        {birthYear > 1900 && <small className={myAge < 18 ? "warn" : ""}>Tuổi của bạn: {myAge}{myAge < 18 ? " — chưa đủ 18 tuổi" : ""}</small>}</label>
+      <label>Khu vực của bạn
+        <select value={region} onChange={e => setRegion(e.target.value)}>
+          {Object.entries(REGION).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select></label>
+      <label>Thành phố (tự đoán theo mạng, sửa được — để trống nếu muốn giấu)
         <input value={location} onChange={e => setLocation(e.target.value)} placeholder="VD: Hà Nội, Vietnam" /></label>
       <button className="primary" onClick={saveProfile}>Tiếp tục</button>
       <button onClick={logout}>Đăng xuất</button>
     </div>
   );
 
+  // ---------- TIM NGUOI + CHAT ----------
   return (
     <div className="card wide">
       <header>
-        <div><b>{profile.name}</b> · {GENDER[profile.gender]} · 📍 {profile.location} {profile.isGuest && "(Khách)"}</div>
+        <div><b>{profile.name}</b> · {GENDER[profile.gender]} · {THIS_YEAR - profile.birthYear} tuổi · {REGION[profile.region]}{profile.location && ` · 📍 ${profile.location}`} {profile.isGuest && "(Khách)"}</div>
         <button onClick={logout}>Đăng xuất</button>
       </header>
 
       {status !== "chatting" ? (
         <div className="find">
-          <label>Muốn gặp: <select value={wantGender} onChange={e => setWantGender(e.target.value)}>
+          <label>Muốn gặp giới tính: <select value={wantGender} onChange={e => setWantGender(e.target.value)}>
             <option value="all">Tất cả</option><option value="male">Nam</option><option value="female">Nữ</option><option value="other">Khác</option>
+          </select></label>
+          <label>Ưu tiên khu vực: <select value={wantRegion} onChange={e => setWantRegion(e.target.value)}>
+            <option value="all">Tất cả</option>
+            {Object.entries(REGION).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select></label>
           {status === "waiting" ? <><p>⏳ Đang tìm người lạ...</p><button onClick={stop}>Huỷ</button></>
             : <button className="primary big" onClick={find}>🔍 Tìm người lạ</button>}
         </div>
       ) : (
         <>
-          <div className="partner">Đang chat với: <b>{partner.name}</b> · {GENDER[partner.gender]} · 📍 {partner.location} {partner.isGuest && "(Khách)"}
+          <div className="partner">Đang chat với: <b>{partner.name}</b> · {GENDER[partner.gender]}{partner.age && ` · ${partner.age} tuổi`} · {REGION[partner.region] || ""}{partner.location && ` · 📍 ${partner.location}`} {partner.isGuest && "(Khách)"}
             <img className="avatar sm" src={partner.avatar} alt="" /></div>
           <div className="msgs">
             {msgs.map((m, i) => <div key={i} className={m.me ? "msg me" : "msg"}>{m.text}</div>)}
@@ -102,10 +148,10 @@ export default function App() {
               onKeyDown={e => e.key === "Enter" && send()} placeholder="Nhập tin nhắn..." />
             <button className="primary" onClick={send}>Gửi</button>
           </div>
-          <div className="row"><button onClick={next}>⏭ Người tiếp theo</button><button onClick={stop}>Kết thúc</button></div>
+          <div className="row"><button onClick={next}>⏭ Người tiếp theo</button><button onClick={report}>🚩 Báo cáo</button><button onClick={stop}>Kết thúc</button></div>
         </>
       )}
-      <small>⚠️ Không chia sẻ SĐT, địa chỉ nhà, mật khẩu. Gặp người xấu hãy bấm Người tiếp theo.</small>
+      <small>⚠️ Không chia sẻ SĐT, địa chỉ nhà, mật khẩu. Tin nhắn không được lưu trên máy chủ.</small>
     </div>
   );
 }
