@@ -11,7 +11,10 @@ app.use(cors({ origin: CLIENT_URL === "*" ? true : CLIENT_URL.split(",") }));
 app.get("/", (req, res) => res.json({ ok: true, name: "StrangerChat API", online: waiting.length, time: new Date().toISOString() }));
 app.get("/health", (req, res) => res.json({ ok: true }));
 
-const io = new Server(server, { cors: { origin: CLIENT_URL === "*" ? "*" : CLIENT_URL.split(","), methods: ["GET", "POST"] } });
+const io = new Server(server, {
+  cors: { origin: CLIENT_URL === "*" ? "*" : CLIENT_URL.split(","), methods: ["GET", "POST"] },
+  maxHttpBufferSize: 3e6 // 3MB - du cho anh da nen (mac dinh Socket.IO chi 1MB)
+});
 
 // --- Matching logic v2 ---
 // waiting: [{ socketId, uid, profile, wantGender, wantRegion }]
@@ -82,6 +85,22 @@ io.on("connection", (socket) => {
     const partnerId = partnerOf.get(socket.id);
     if (!partnerId || !text?.trim()) return;
     io.to(partnerId).emit("receive_message", { text: String(text).slice(0, 1000), from: socket.data.profile, at: Date.now() });
+  });
+
+  // Gui anh: chi chap nhan data URL anh nen san tu client, toi da ~2.2MB, khong luu lai tren server
+  socket.on("send_image", ({ data }) => {
+    const partnerId = partnerOf.get(socket.id);
+    if (!partnerId || typeof data !== "string") return;
+    if (data.length > 2_300_000) return socket.emit("error_msg", "image_too_big");
+    if (!/^data:image\/(jpeg|png|webp);base64,/.test(data)) return;
+    io.to(partnerId).emit("receive_image", { data, from: socket.data.profile, at: Date.now() });
+  });
+
+  // Gui sticker: 1 emoji ngan
+  socket.on("send_sticker", ({ sticker }) => {
+    const partnerId = partnerOf.get(socket.id);
+    if (!partnerId || typeof sticker !== "string" || !sticker || sticker.length > 8) return;
+    io.to(partnerId).emit("receive_sticker", { sticker, from: socket.data.profile, at: Date.now() });
   });
 
   socket.on("typing", ({ isTyping }) => {

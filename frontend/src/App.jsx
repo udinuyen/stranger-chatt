@@ -7,6 +7,7 @@ const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
 const GENDER = { male: "♂ Nam", female: "♀ Nữ", other: "⚧ Khác" };
 const REGION = { bac: "Miền Bắc", trung: "Miền Trung", nam: "Miền Nam", "nuoc-ngoai": "Nước ngoài" };
 const THIS_YEAR = new Date().getFullYear();
+const STICKERS = ["😀","😂","🥰","😍","😎","🤩","😜","🤗","😴","🤔","😱","🥺","😭","😡","👍","👏","🙏","💪","🔥","❤️","💔","🎉","🌹","🍀","🐱","🐶","🦄","🍕","☕","⚽"];
 let socket;
 
 export default function App() {
@@ -24,7 +25,10 @@ export default function App() {
   const [msgs, setMsgs] = useState([]);
   const [text, setText] = useState("");
   const [typing, setTyping] = useState(false);
+  const [showStickers, setShowStickers] = useState(false);
+  const [lightbox, setLightbox] = useState(null);
   const bottomRef = useRef(null);
+  const fileRef = useRef(null);
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
@@ -37,11 +41,16 @@ export default function App() {
     if (!profile) return;
     socket = io(BACKEND, { transports: ["websocket"] });
     socket.on("matched", ({ partner }) => { setPartner(partner); setStatus("chatting"); setMsgs([]); });
-    socket.on("receive_message", ({ text, from }) => setMsgs(m => [...m, { text, me: false, from }]));
+    socket.on("receive_message", ({ text, from }) => setMsgs(m => [...m, { kind: "text", text, me: false, from }]));
+    socket.on("receive_image", ({ data, from }) => setMsgs(m => [...m, { kind: "image", data, me: false, from }]));
+    socket.on("receive_sticker", ({ sticker, from }) => setMsgs(m => [...m, { kind: "sticker", sticker, me: false, from }]));
     socket.on("partner_typing", ({ isTyping }) => setTyping(isTyping));
     socket.on("partner_left", () => { setStatus("idle"); setPartner(null); alert("Người lạ đã rời đi. Bấm Tìm để gặp người mới."); });
     socket.on("report_ok", () => alert("Đã ghi nhận báo cáo. Người này sẽ không được ghép lại với bạn."));
-    socket.on("error_msg", (code) => { if (code === "underage") { alert("StrangerChat chỉ dành cho người từ 18 tuổi trở lên."); setProfile(null); setStatus("idle"); } });
+    socket.on("error_msg", (code) => {
+      if (code === "underage") { alert("StrangerChat chỉ dành cho người từ 18 tuổi trở lên."); setProfile(null); setStatus("idle"); }
+      if (code === "image_too_big") alert("Ảnh quá lớn, gửi không thành công. Chọn ảnh nhỏ hơn nhé.");
+    });
     return () => socket.disconnect();
   }, [profile]);
 
@@ -60,7 +69,34 @@ export default function App() {
   const next = () => { setPartner(null); setMsgs([]); setStatus("waiting"); socket.emit("next"); };
   const stop = () => { socket.emit("leave_queue"); setStatus("idle"); setPartner(null); };
   const report = () => { if (confirm("Báo cáo người này? Cuộc trò chuyện sẽ kết thúc và bạn không bị ghép lại với họ.")) { socket.emit("report_partner"); stop(); } };
-  const send = () => { if (!text.trim()) return; setMsgs(m => [...m, { text, me: true }]); socket.emit("send_message", { text }); setText(""); };
+  const send = () => { if (!text.trim()) return; setMsgs(m => [...m, { kind: "text", text, me: true }]); socket.emit("send_message", { text }); setText(""); };
+  const sendSticker = (s) => { setMsgs(m => [...m, { kind: "sticker", sticker: s, me: true }]); socket.emit("send_sticker", { sticker: s }); setShowStickers(false); };
+
+  // Nen anh tren canvas: vua de nhe, vua tu dong xoa metadata (ke ca toa do GPS trong anh)
+  const onPickImage = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !file.type.startsWith("image/")) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let scale = Math.min(1, 1024 / Math.max(img.width, img.height));
+      const render = (sc, q) => {
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        return c.toDataURL("image/jpeg", q);
+      };
+      let data = render(scale, 0.82);
+      if (data.length > 2_200_000) data = render(scale * 0.7, 0.7);
+      if (data.length > 2_300_000) return alert("Ảnh này quá lớn kể cả sau khi nén. Chọn ảnh khác nhé.");
+      setMsgs(m => [...m, { kind: "image", data, me: true }]);
+      socket.emit("send_image", { data });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); alert("Không đọc được file ảnh này."); };
+    img.src = url;
+  };
 
   // ---------- LANDING PAGE (chua dang nhap) ----------
   if (!user) return (
@@ -140,14 +176,23 @@ export default function App() {
           <div className="partner">Đang chat với: <b>{partner.name}</b> · {GENDER[partner.gender]}{partner.age && ` · ${partner.age} tuổi`} · {REGION[partner.region] || ""}{partner.location && ` · 📍 ${partner.location}`} {partner.isGuest && "(Khách)"}
             <img className="avatar sm" src={partner.avatar} alt="" /></div>
           <div className="msgs">
-            {msgs.map((m, i) => <div key={i} className={m.me ? "msg me" : "msg"}>{m.text}</div>)}
+            {msgs.map((m, i) => m.kind === "image"
+              ? <div key={i} className={m.me ? "msg me imgmsg" : "msg imgmsg"}><img src={m.data} alt="Ảnh" onClick={() => setLightbox(m.data)} /></div>
+              : m.kind === "sticker"
+                ? <div key={i} className={m.me ? "msg me sticker" : "msg sticker"}>{m.sticker}</div>
+                : <div key={i} className={m.me ? "msg me" : "msg"}>{m.text}</div>)}
             {typing && <div className="msg">Đang gõ...</div>}<div ref={bottomRef} />
           </div>
+          {showStickers && <div className="stickers">{STICKERS.map(s => <button key={s} onClick={() => sendSticker(s)}>{s}</button>)}</div>}
           <div className="row">
+            <button title="Gửi ảnh" onClick={() => fileRef.current?.click()}>📷</button>
+            <button title="Sticker" onClick={() => setShowStickers(v => !v)}>😀</button>
             <input value={text} onChange={e => { setText(e.target.value); socket.emit("typing", { isTyping: true }); }}
               onKeyDown={e => e.key === "Enter" && send()} placeholder="Nhập tin nhắn..." />
             <button className="primary" onClick={send}>Gửi</button>
+            <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickImage} />
           </div>
+          {lightbox && <div className="lightbox" onClick={() => setLightbox(null)}><img src={lightbox} alt="Ảnh phóng to" /></div>}
           <div className="row"><button onClick={next}>⏭ Người tiếp theo</button><button onClick={report}>🚩 Báo cáo</button><button onClick={stop}>Kết thúc</button></div>
         </>
       )}
