@@ -25,7 +25,7 @@ jobs:
         working-directory: frontend/ios/App
         run: |
           xcodebuild build \
-            -project App.xcodeproj \
+            -workspace App.xcworkspace \
             -scheme App \
             -sdk iphonesimulator \
             -destination "generic/platform=iOS Simulator" \
