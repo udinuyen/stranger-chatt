@@ -1,0 +1,9 @@
+{
+	"appId": "com.example.strangerchat",
+	"appName": "StrangerChat",
+	"server": {
+		"cleartext": false,
+		"url": "https://stranger-chatt.vercel.app"
+	},
+	"webDir": "dist"
+}
