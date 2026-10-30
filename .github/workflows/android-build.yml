@@ -28,7 +28,9 @@ jobs:
           npx cap sync android
       - name: Build APK debug
         working-directory: frontend/android
-        run: ./gradlew assembleDebug
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
       - name: Tai APK len
         uses: actions/upload-artifact@v4
         with:
