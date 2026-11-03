@@ -10,7 +10,7 @@ const CLIENT_URL = process.env.CLIENT_URL || "*";
 const MAX_SESSIONS = 5;
 
 app.use(cors({ origin: CLIENT_URL === "*" ? true : CLIENT_URL.split(",") }));
-app.get("/", (req, res) => res.json({ ok: true, name: "StrangerChat API", waiting: waiting.length, sessions: sessions.size, time: new Date().toISOString() }));
+app.get("/", (req, res) => res.json({ ok: true, name: "StrangerChat API", online: online.size, waiting: waiting.length, sessions: sessions.size, time: new Date().toISOString() }));
 app.get("/health", (req, res) => res.json({ ok: true }));
 
 const io = new Server(server, {
@@ -25,6 +25,52 @@ let waiting = [];
 const sessions = new Map(); // sessionId -> { a, b } (socketId)
 const history = new Map();  // uid -> Set<uid> da tung ghep (khong ghep lai)
 const reports = [];
+const online = new Map();   // socketId -> publicProfile (thong tin cong khai, KHONG co uid)
+const blocked = new Map();  // uid -> Set<uid> da bi bao cao (chan ca xin chao lan ghep truc tiep)
+const waveCooldown = new Map(); // "uid->uid" -> thoi diem xin chao gan nhat (chong spam)
+
+const isBlocked = (a, b) => blocked.get(a)?.has(b) || blocked.get(b)?.has(a);
+function addBlocked(a, b) {
+  if (!blocked.has(a)) blocked.set(a, new Set());
+  if (!blocked.has(b)) blocked.set(b, new Set());
+  blocked.get(a).add(b); blocked.get(b).add(a);
+}
+function sanitizeProfile(profile) {
+  const year = new Date().getFullYear();
+  const birthYear = parseInt(profile.birthYear, 10);
+  const age = birthYear >= 1950 && birthYear <= year ? year - birthYear : null;
+  return {
+    uid: String(profile.uid).slice(0, 60),
+    name: String(profile.name).slice(0, 40),
+    gender: ["male", "female", "other"].includes(profile.gender) ? profile.gender : "other",
+    birthYear: age !== null ? birthYear : null, age,
+    region: ["bac", "trung", "nam", "nuoc-ngoai"].includes(profile.region) ? profile.region : "bac",
+    location: String(profile.location || "").slice(0, 60),
+    avatar: String(profile.avatar || "").slice(0, 500),
+    isGuest: !!profile.isGuest
+  };
+}
+// Ban cong khai gui cho nguoi khac: bo uid, bo birthYear (chi gui tuoi)
+const publicProfile = (p) => ({ name: p.name, gender: p.gender, age: p.age, region: p.region, location: p.location, avatar: p.avatar, isGuest: p.isGuest });
+function broadcastOnline() {
+  const users = [...online.entries()].map(([id, p]) => ({ id, ...p }));
+  for (const [sid, sock] of io.sockets.sockets) {
+    sock.emit("online_update", { count: online.size, users: users.filter(u => u.id !== sid) });
+  }
+}
+const alreadyTogether = (sidA, sidB) => [...sessions.values()].some(s => (s.a === sidA && s.b === sidB) || (s.a === sidB && s.b === sidA));
+function createSession(sockA, sockB) {
+  waiting = waiting.filter(w => w.socketId !== sockA.id && w.socketId !== sockB.id);
+  sockA.data.searching = false; sockB.data.searching = false;
+  const sessionId = randomUUID();
+  sessions.set(sessionId, { a: sockA.id, b: sockB.id });
+  sockA.data.sessions.add(sessionId); sockB.data.sessions.add(sessionId);
+  remember(sockA.data.uid, sockB.data.uid);
+  sockA.emit("matched", { sessionId, partner: publicProfile(sockB.data.profile) });
+  sockB.emit("matched", { sessionId, partner: publicProfile(sockA.data.profile) });
+  console.log("Matched:", sockA.data.profile.name, "<->", sockB.data.profile.name, "| sessions:", sessions.size);
+  return sessionId;
+}
 
 const seen = (a, b) => history.get(a)?.has(b) || history.get(b)?.has(a);
 function remember(a, b) {
@@ -65,14 +111,7 @@ function startSearch(socket) {
   const [partner] = waiting.splice(idx, 1);
   const partnerSock = io.sockets.sockets.get(partner.socketId);
   if (!partnerSock) { waiting.push(entry); socket.emit("waiting"); return; }
-  partnerSock.data.searching = false; socket.data.searching = false;
-  const sessionId = randomUUID();
-  sessions.set(sessionId, { a: socket.id, b: partner.socketId });
-  socket.data.sessions.add(sessionId); partnerSock.data.sessions.add(sessionId);
-  remember(entry.uid, partner.uid);
-  socket.emit("matched", { sessionId, partner: partner.profile });
-  partnerSock.emit("matched", { sessionId, partner: entry.profile });
-  console.log("Matched:", entry.profile.name, "<->", partner.profile.name, "| sessions:", sessions.size);
+  createSession(socket, partnerSock);
 }
 
 io.on("connection", (socket) => {
@@ -81,26 +120,56 @@ io.on("connection", (socket) => {
 
   socket.on("join_queue", ({ profile, wantGender, wantRegion }) => {
     if (!profile?.name || !profile?.gender || !profile?.uid) return socket.emit("error_msg", "Thiếu profile");
-    const year = new Date().getFullYear();
-    const birthYear = parseInt(profile.birthYear, 10);
-    const age = birthYear >= 1950 && birthYear <= year ? year - birthYear : null;
-    if (age !== null && age < 18) return socket.emit("error_msg", "underage");
-    socket.data.profile = {
-      uid: String(profile.uid).slice(0, 60),
-      name: String(profile.name).slice(0, 40),
-      gender: ["male", "female", "other"].includes(profile.gender) ? profile.gender : "other",
-      birthYear: age !== null ? birthYear : null, age,
-      region: ["bac", "trung", "nam", "nuoc-ngoai"].includes(profile.region) ? profile.region : "bac",
-      location: String(profile.location || "").slice(0, 60),
-      avatar: String(profile.avatar || "").slice(0, 500),
-      isGuest: !!profile.isGuest
-    };
-    socket.data.uid = socket.data.profile.uid;
+    const clean = sanitizeProfile(profile);
+    if (clean.age !== null && clean.age < 18) return socket.emit("error_msg", "underage");
+    socket.data.profile = clean;
+    socket.data.uid = clean.uid;
+    if (!online.has(socket.id)) { online.set(socket.id, publicProfile(clean)); broadcastOnline(); }
     socket.data.searchParams = {
       wantGender: ["all", "male", "female", "other"].includes(wantGender) ? wantGender : "all",
       wantRegion: ["all", "bac", "trung", "nam", "nuoc-ngoai"].includes(wantRegion) ? wantRegion : "all"
     };
     startSearch(socket);
+  });
+
+  // --- Nguoi online + Xin chao ---
+  socket.on("go_online", (profile) => {
+    if (!profile?.name || !profile?.gender || !profile?.uid) return;
+    const clean = sanitizeProfile(profile);
+    if (clean.age !== null && clean.age < 18) return socket.emit("error_msg", "underage");
+    socket.data.profile = clean;
+    socket.data.uid = clean.uid;
+    online.set(socket.id, publicProfile(clean));
+    broadcastOnline();
+  });
+
+  socket.on("wave", ({ toId } = {}) => {
+    if (!socket.data.profile || !toId || toId === socket.id) return;
+    const target = io.sockets.sockets.get(toId);
+    if (!target?.data?.profile || !online.has(toId)) return socket.emit("wave_error", "Người đó vừa offline rồi.");
+    if (isBlocked(socket.data.uid, target.data.uid)) return socket.emit("wave_error", "Không thể xin chào người này.");
+    if (alreadyTogether(socket.id, toId)) return socket.emit("wave_error", "Bạn đang chat với người này rồi.");
+    const key = `${socket.data.uid}->${target.data.uid}`;
+    const last = waveCooldown.get(key) || 0;
+    if (Date.now() - last < 60_000) return socket.emit("wave_error", "Bạn vừa xin chào người này rồi, chờ một chút nhé.");
+    waveCooldown.set(key, Date.now());
+    target.emit("wave_received", { fromId: socket.id, from: publicProfile(socket.data.profile) });
+    socket.emit("wave_sent", { toId });
+  });
+
+  socket.on("wave_accept", ({ fromId } = {}) => {
+    const waver = fromId && io.sockets.sockets.get(fromId);
+    if (!waver?.data?.profile || !socket.data.profile) return socket.emit("wave_error", "Người xin chào vừa offline rồi.");
+    if (isBlocked(socket.data.uid, waver.data.uid)) return socket.emit("wave_error", "Không thể chat với người này.");
+    if (alreadyTogether(socket.id, waver.id)) return;
+    if (sessionCount(socket) >= MAX_SESSIONS || sessionCount(waver) >= MAX_SESSIONS)
+      return socket.emit("wave_error", "Một trong hai người đã đủ 5 cuộc chat cùng lúc.");
+    createSession(socket, waver);
+  });
+
+  socket.on("wave_decline", ({ fromId } = {}) => {
+    const waver = fromId && io.sockets.sockets.get(fromId);
+    if (waver && socket.data.profile) waver.emit("wave_declined", { by: publicProfile(socket.data.profile) });
   });
 
   socket.on("cancel_search", () => {
@@ -137,6 +206,7 @@ io.on("connection", (socket) => {
     if (partnerProfile && socket.data.uid) {
       reports.push({ reporter: socket.data.uid, reported: partnerProfile.uid, at: new Date().toISOString() });
       remember(socket.data.uid, partnerProfile.uid);
+      addBlocked(socket.data.uid, partnerProfile.uid);
       console.log("REPORT:", socket.data.uid, "->", partnerProfile.uid, "| total:", reports.length);
     }
     if (sessionId && p) endSession(sessionId);
@@ -145,6 +215,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     waiting = waiting.filter(w => w.socketId !== socket.id);
+    if (online.delete(socket.id)) broadcastOnline();
     [...(socket.data.sessions || [])].forEach(sid => endSession(sid));
   });
 });

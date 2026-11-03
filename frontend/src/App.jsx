@@ -23,6 +23,14 @@ export default function App() {
   const [location, setLocation] = useState("");
   const [editOpen, setEditOpen] = useState(false);
 
+  // Nguoi online + xin chao
+  const [onlineCount, setOnlineCount] = useState(0);
+  const [onlineUsers, setOnlineUsers] = useState([]); // [{id, name, gender, age, region, location, avatar, isGuest}]
+  const [onlineOpen, setOnlineOpen] = useState(false);
+  const [waves, setWaves] = useState([]); // [{fromId, from}]
+  const [waved, setWaved] = useState({}); // id -> true (da xin chao, khoa 60s)
+  const [waveNote, setWaveNote] = useState("");
+
   // Multi-chat state
   const [chats, setChats] = useState([]); // {id, partner, msgs:[], typing, unread, ended}
   const [activeId, setActiveId] = useState(null);
@@ -47,6 +55,17 @@ export default function App() {
   useEffect(() => {
     if (!profile) return;
     socket = io(BACKEND, { transports: ["websocket"] });
+    socket.on("connect", () => socket.emit("go_online", profile));
+    socket.on("online_update", ({ count, users }) => { setOnlineCount(count); setOnlineUsers(users || []); });
+    socket.on("wave_received", ({ fromId, from }) =>
+      setWaves(prev => prev.some(w => w.fromId === fromId) ? prev : [...prev, { fromId, from }]));
+    socket.on("wave_sent", ({ toId }) => {
+      setWaved(prev => ({ ...prev, [toId]: true }));
+      setWaveNote("Đã gửi lời xin chào 👋 Chờ bạn ấy trả lời nhé.");
+      setTimeout(() => setWaved(prev => { const n = { ...prev }; delete n[toId]; return n; }), 60_000);
+    });
+    socket.on("wave_error", (msg) => setWaveNote(msg));
+    socket.on("wave_declined", ({ by }) => setWaveNote(`${by?.name || "Bạn ấy"} đã bỏ qua lời xin chào lần này.`));
     const addMsg = (sessionId, msg) => setChats(prev => prev.map(c => c.id === sessionId
       ? { ...c, msgs: [...c.msgs, msg], unread: sessionId === activeIdRef.current ? 0 : c.unread + (msg.me ? 0 : 1) } : c));
     socket.on("waiting", () => setSearching(true));
@@ -84,6 +103,9 @@ export default function App() {
 
   const find = () => socket.emit("join_queue", { profile, wantGender, wantRegion });
   const cancelSearch = () => { socket.emit("cancel_search"); setSearching(false); };
+  const wave = (u) => { setWaveNote(""); socket.emit("wave", { toId: u.id }); };
+  const acceptWave = (w) => { setWaves(prev => prev.filter(x => x.fromId !== w.fromId)); socket.emit("wave_accept", { fromId: w.fromId }); };
+  const declineWave = (w) => { setWaves(prev => prev.filter(x => x.fromId !== w.fromId)); socket.emit("wave_decline", { fromId: w.fromId }); };
   const openChat = (id) => { setActiveId(id); setChats(prev => prev.map(c => c.id === id ? { ...c, unread: 0 } : c)); };
   const closeChat = (id) => {
     socket.emit("leave_session", { sessionId: id });
@@ -198,6 +220,34 @@ export default function App() {
         <div><b>{profile.name}</b> · {GENDER[profile.gender]} · {THIS_YEAR - profile.birthYear} tuổi · {REGION[profile.region]}{profile.location && ` · 📍 ${profile.location}`} {profile.isGuest && "(Khách)"}</div>
         <button onClick={logout}>Đăng xuất</button>
       </header>
+
+      {waves.map(w => (
+        <div key={w.fromId} className="wavebanner">
+          <img className="avatar sm" src={w.from.avatar} alt="" />
+          <span><b>{w.from.name}</b> 👋 xin chào bạn! · {GENDER[w.from.gender]}{w.from.age ? ` · ${w.from.age} tuổi` : ""} · {REGION[w.from.region] || ""}</span>
+          <button className="primary" onClick={() => acceptWave(w)}>💬 Chat ngay</button>
+          <button onClick={() => declineWave(w)}>Bỏ qua</button>
+        </div>
+      ))}
+      {waveNote && <div className="wavenote" onClick={() => setWaveNote("")}>{waveNote}</div>}
+
+      <div className="onlinebar" onClick={() => setOnlineOpen(v => !v)} role="button" aria-expanded={onlineOpen} title="Bấm để xem ai đang online">
+        <span>🟢 <b>{onlineCount}</b> người đang online{onlineUsers.length > 0 ? ` — ngoài bạn còn ${onlineUsers.length} người` : ""}</span>
+        <span className="chevron">{onlineOpen ? "▴" : "▾"}</span>
+      </div>
+      {onlineOpen && (
+        <div className="onlinelist">
+          {onlineUsers.length === 0
+            ? <small>Chưa có ai khác online lúc này. Chờ một lát hoặc bấm Tìm người lạ nhé.</small>
+            : onlineUsers.map(u => (
+              <div key={u.id} className="onlineuser">
+                <img className="avatar sm" src={u.avatar} alt="" />
+                <span className="onlineinfo"><b>{u.name}</b>{u.isGuest ? " (Khách)" : ""} · {GENDER[u.gender]}{u.age ? ` · ${u.age} tuổi` : ""} · {REGION[u.region] || ""}{u.location ? ` · 📍 ${u.location}` : ""}</span>
+                <button className="wavebtn" disabled={!!waved[u.id]} onClick={() => wave(u)}>{waved[u.id] ? "Đã chào ✓" : "👋 Xin chào"}</button>
+              </div>
+            ))}
+        </div>
+      )}
 
       {chats.length > 0 && (
         <div className="tabs">
