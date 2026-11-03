@@ -21,6 +21,7 @@ export default function App() {
   const [wantGender, setWantGender] = useState("all");
   const [wantRegion, setWantRegion] = useState("all");
   const [location, setLocation] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
 
   // Multi-chat state
   const [chats, setChats] = useState([]); // {id, partner, msgs:[], typing, unread, ended}
@@ -125,6 +126,8 @@ export default function App() {
         <p>Trò chuyện ẩn danh với người thật đang online: tâm sự, chém gió hay chỉ để bớt buồn. Tin nhắn không lưu trên máy chủ — rời đi là xoá dấu vết. Chat được tối đa {MAX_CHATS} người cùng lúc.</p>
         <button className="primary big" onClick={loginGoogle}>Đăng nhập bằng Google</button>
         <button className="big" onClick={loginGuest}>Vào nhanh với tư cách Khách</button>
+        <a className="dlbtn" href="https://github.com/udinuyen/stranger-chatt/releases/latest/download/StrangerChat.apk">📱 Tải app Android (APK)</a>
+        <small>Dùng Android thì tải app cho tiện. iPhone cứ dùng bản web này là chat chung được với mọi người.</small>
         <small>Chỉ dành cho người từ 18 tuổi trở lên.</small>
       </div>
       <div className="card">
@@ -145,25 +148,44 @@ export default function App() {
   );
 
   // ---------- HO SO ----------
+  // Gon: mac dinh form thu lai thanh 1 dong tom tat, chi thay 2 nut
+  // Tiep tuc / Dang xuat. Ai can sua thi bam vao tom tat de mo form ra.
+  const displayName = nickname.trim() || (user.isAnonymous ? `Khách-${user.uid.slice(0, 5)}` : (user.displayName || "Người dùng"));
   if (!profile) return (
     <div className="card">
       <h2>Hồ sơ của bạn</h2>
       <img className="avatar" src={user.photoURL || `https://api.dicebear.com/9.x/thumbs/svg?seed=${user.uid}`} alt="" />
-      <label>Biệt danh (người lạ sẽ thấy tên này)
-        <input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="Để trống = dùng tên tài khoản" maxLength={40} /></label>
-      <label>Giới tính của bạn
-        <select value={gender} onChange={e => setGender(e.target.value)}>
-          <option value="male">Nam</option><option value="female">Nữ</option><option value="other">Khác</option>
-        </select></label>
-      <label>Năm sinh (chỉ hiện tuổi, không hiện năm sinh)
-        <input type="number" value={birthYear} onChange={e => setBirthYear(parseInt(e.target.value) || THIS_YEAR)} min="1950" max={THIS_YEAR} />
-        {birthYear > 1900 && <small className={myAge < 18 ? "warn" : ""}>Tuổi của bạn: {myAge}{myAge < 18 ? " — chưa đủ 18 tuổi" : ""}</small>}</label>
-      <label>Khu vực của bạn
-        <select value={region} onChange={e => setRegion(e.target.value)}>
-          {Object.entries(REGION).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select></label>
-      <label>Thành phố (tự đoán theo mạng, sửa được — để trống nếu muốn giấu)
-        <input value={location} onChange={e => setLocation(e.target.value)} placeholder="VD: Hà Nội, Vietnam" /></label>
+
+      <div className="profile-summary" onClick={() => setEditOpen(v => !v)} role="button" aria-expanded={editOpen} title="Bấm để chỉnh sửa hồ sơ">
+        <div className="summary-text">
+          <b>{displayName}</b>
+          <span>{GENDER[gender]} · {myAge} tuổi · {REGION[region]}{location ? ` · 📍 ${location}` : ""}</span>
+          {myAge < 18 && <span className="warn">Chưa đủ 18 tuổi — bấm vào đây để sửa năm sinh</span>}
+          <small>Chạm để {editOpen ? "thu gọn" : "chỉnh sửa hồ sơ"}</small>
+        </div>
+        <span className="chevron">{editOpen ? "▴" : "▾"}</span>
+      </div>
+
+      {editOpen && (
+        <div className="profile-form">
+          <label>Biệt danh (người lạ sẽ thấy tên này)
+            <input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="Để trống = dùng tên tài khoản" maxLength={40} /></label>
+          <label>Giới tính của bạn
+            <select value={gender} onChange={e => setGender(e.target.value)}>
+              <option value="male">Nam</option><option value="female">Nữ</option><option value="other">Khác</option>
+            </select></label>
+          <label>Năm sinh (chỉ hiện tuổi, không hiện năm sinh)
+            <input type="number" value={birthYear} onChange={e => setBirthYear(parseInt(e.target.value) || THIS_YEAR)} min="1950" max={THIS_YEAR} />
+            {birthYear > 1900 && <small className={myAge < 18 ? "warn" : ""}>Tuổi của bạn: {myAge}{myAge < 18 ? " — chưa đủ 18 tuổi" : ""}</small>}</label>
+          <label>Khu vực của bạn
+            <select value={region} onChange={e => setRegion(e.target.value)}>
+              {Object.entries(REGION).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select></label>
+          <label>Thành phố (tự đoán theo mạng, sửa được — để trống nếu muốn giấu)
+            <input value={location} onChange={e => setLocation(e.target.value)} placeholder="VD: Hà Nội, Vietnam" /></label>
+        </div>
+      )}
+
       <button className="primary" onClick={saveProfile}>Tiếp tục</button>
       <button onClick={logout}>Đăng xuất</button>
     </div>
