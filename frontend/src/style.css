@@ -7,7 +7,10 @@
 .warn{color:#d33!important}
 button{padding:12px;border:1px solid #ddd;border-radius:12px;background:#f7f7f7;cursor:pointer;font-size:15px}
 button.primary{background:#667eea;color:#fff;border:0}button.big{font-size:18px;padding:16px}
-.dlbtn{display:block;text-align:center;padding:14px;border-radius:12px;background:#22a35a;color:#fff;font-size:16px;font-weight:600;text-decoration:none}
+.dlbtn{display:block;width:100%;text-align:center;padding:14px;border:0;border-radius:12px;background:#22a35a;color:#fff;font-size:16px;font-weight:600;text-decoration:none;cursor:pointer}
+.qrcard{display:flex;flex-direction:column;gap:12px;align-items:center;max-height:92vh}
+.qrcard img{max-width:min(92vw,430px);max-height:78vh;border-radius:16px;cursor:default}
+.qrcard button{min-width:140px}
 input,select{width:100%;padding:12px;border:1px solid #ddd;border-radius:12px;font-size:15px}
 .avatar{width:72px;height:72px;border-radius:50%;align-self:center}.avatar.sm{width:32px;height:32px}
 header,.row,.partner{display:flex;justify-content:space-between;align-items:center;gap:8px}.row input{flex:1}

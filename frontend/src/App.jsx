@@ -37,6 +37,7 @@ export default function App() {
   const [searching, setSearching] = useState(false);
   const [text, setText] = useState("");
   const [showStickers, setShowStickers] = useState(false);
+  const [showQr, setShowQr] = useState(false);
   const [lightbox, setLightbox] = useState(null);
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
@@ -148,8 +149,8 @@ export default function App() {
         <p>Trò chuyện ẩn danh với người thật đang online: tâm sự, chém gió hay chỉ để bớt buồn. Tin nhắn không lưu trên máy chủ — rời đi là xoá dấu vết. Chat được tối đa {MAX_CHATS} người cùng lúc.</p>
         <button className="primary big" onClick={loginGoogle}>Đăng nhập bằng Google</button>
         <button className="big" onClick={loginGuest}>Vào nhanh với tư cách Khách</button>
-        <a className="dlbtn" href="https://github.com/udinuyen/stranger-chatt/releases/latest/download/StrangerChat.apk">📱 Tải app Android (APK)</a>
-        <small>Dùng Android thì tải app cho tiện. iPhone cứ dùng bản web này là chat chung được với mọi người.</small>
+        <button className="dlbtn" onClick={() => setShowQr(true)}>📱 Tải app Android (APK)</button>
+        <small>Bấm nút tải app sẽ hiện mã QR — quét bằng điện thoại để mở StrangerChat ngay trên điện thoại. iPhone cứ dùng bản web này là chat chung được với mọi người.</small>
         <small>Chỉ dành cho người từ 18 tuổi trở lên.</small>
       </div>
       <div className="card">
@@ -166,6 +167,14 @@ export default function App() {
           <li>Rời đi bất cứ lúc nào — người đó không được ghép lại với bạn.</li>
         </ul>
       </div>
+      {showQr && (
+        <div className="lightbox" onClick={() => setShowQr(false)}>
+          <div className="qrcard" onClick={e => e.stopPropagation()}>
+            <img src="/qr-poster.png" alt="Mã QR StrangerChat — quét để mở trên điện thoại" />
+            <button className="primary" onClick={() => setShowQr(false)}>Đóng</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 
