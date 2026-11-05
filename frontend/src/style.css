@@ -5,7 +5,7 @@
 body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f0f2f5;color:#050505;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:16px}
 h1,h2,h3{color:#050505}
 .card{background:#fff;border:1px solid #dddfe2;border-radius:20px;padding:28px;width:100%;max-width:420px;box-shadow:0 4px 18px rgba(0,0,0,.08);display:flex;flex-direction:column;gap:14px}
-.card.wide{max-width:640px;height:92vh}
+.card.wide{max-width:640px;height:92vh;padding:20px 20px 14px;gap:10px}
 .landing{display:flex;flex-direction:column;gap:16px;width:100%;max-width:420px}
 .hero{font-size:20px;font-weight:700;margin:0;color:#050505}
 .steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:14px;color:#1c1e21}
@@ -24,6 +24,20 @@ input,select{width:100%;padding:12px 16px;border:1px solid transparent;border-ra
 input:focus,select:focus{outline:none;background:#fff;border-color:#0084ff;box-shadow:0 0 0 3px rgba(0,132,255,.18)}
 .avatar{width:72px;height:72px;border-radius:50%;align-self:center}
 .avatar.sm{width:32px;height:32px}
+.avatar.md{width:42px;height:42px;border-radius:50%;flex-shrink:0}
+.appheader{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid #e4e6eb}
+.headmeta{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.headmeta b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.headmeta span{font-size:12px;color:#65676b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logoutbtn{padding:8px 14px;font-size:13px;flex-shrink:0}
+.partnerbar{display:flex;align-items:center;gap:10px;padding:2px 0}
+.pstatus{font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;flex-shrink:0}
+.pstatus.on{background:#e9f9ee;color:#177245}
+.pstatus.off{background:#fde8ec;color:#c7254e}
+.chattingtag{font-size:12px;font-weight:600;padding:7px 12px;border-radius:999px;background:#e7f3ff;color:#0064d1;white-space:nowrap}
+.row.actions button{flex:1;padding:10px 6px;font-size:13.5px;white-space:nowrap}
+.row.composer>button:not(.primary){width:44px;height:44px;padding:0;border-radius:50%;flex-shrink:0;font-size:17px}
+.row.composer .primary{padding:12px 22px;flex-shrink:0}
 header,.row,.partner{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .row input{flex:1}
 .msgs{flex:1;overflow:auto;background:#fff;border-top:1px solid #e4e6eb;border-bottom:1px solid #e4e6eb;padding:12px 4px;display:flex;flex-direction:column;gap:3px}
@@ -41,11 +55,11 @@ small{color:#65676b;text-align:center}
 .lightbox img{max-width:92vw;max-height:92vh;border-radius:14px}
 .tabs{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .tab{position:relative;padding:3px;border-radius:50%;border:2px solid transparent;background:transparent;line-height:0}
-.tab img{width:42px;height:42px;border-radius:50%}
+.tab img{width:38px;height:38px;border-radius:50%}
 .tab.on{border-color:#0084ff}
 .tab .badge{position:absolute;top:-4px;right:-4px;background:#f02849;color:#fff;font-size:11px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px}
 .tab .off{position:absolute;bottom:0;right:0;color:#999;font-size:10px}
-.tabcount{font-size:12px;color:#65676b}
+.tabcount{font-size:12px;color:#65676b;margin-left:auto}
 .ended{background:#fff4e5;border:1px solid #ffd8a8;border-radius:12px;padding:8px 12px;font-size:13px;color:#7a4b00}
 .findmore{justify-content:center}
 .profile-summary{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#f0f2f5;border-radius:16px;padding:14px 16px;cursor:pointer;text-align:left}

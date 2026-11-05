@@ -66,8 +66,8 @@ function createSession(sockA, sockB) {
   sessions.set(sessionId, { a: sockA.id, b: sockB.id });
   sockA.data.sessions.add(sessionId); sockB.data.sessions.add(sessionId);
   remember(sockA.data.uid, sockB.data.uid);
-  sockA.emit("matched", { sessionId, partner: publicProfile(sockB.data.profile) });
-  sockB.emit("matched", { sessionId, partner: publicProfile(sockA.data.profile) });
+  sockA.emit("matched", { sessionId, partner: publicProfile(sockB.data.profile), partnerId: sockB.id });
+  sockB.emit("matched", { sessionId, partner: publicProfile(sockA.data.profile), partnerId: sockA.id });
   console.log("Matched:", sockA.data.profile.name, "<->", sockB.data.profile.name, "| sessions:", sessions.size);
   return sessionId;
 }

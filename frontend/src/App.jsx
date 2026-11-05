@@ -41,6 +41,12 @@ export default function App() {
   const [lightbox, setLightbox] = useState(null);
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
+  const noteTimerRef = useRef(null);
+  const showNote = (msg) => {
+    setWaveNote(msg);
+    if (noteTimerRef.current) clearTimeout(noteTimerRef.current);
+    noteTimerRef.current = setTimeout(() => setWaveNote(""), 4000);
+  };
   const activeIdRef = useRef(null);
   activeIdRef.current = activeId;
 
@@ -62,17 +68,17 @@ export default function App() {
       setWaves(prev => prev.some(w => w.fromId === fromId) ? prev : [...prev, { fromId, from }]));
     socket.on("wave_sent", ({ toId }) => {
       setWaved(prev => ({ ...prev, [toId]: true }));
-      setWaveNote("Đã gửi lời xin chào 👋 Chờ bạn ấy trả lời nhé.");
+      showNote("Đã gửi lời xin chào 👋 Chờ bạn ấy trả lời nhé.");
       setTimeout(() => setWaved(prev => { const n = { ...prev }; delete n[toId]; return n; }), 60_000);
     });
-    socket.on("wave_error", (msg) => setWaveNote(msg));
-    socket.on("wave_declined", ({ by }) => setWaveNote(`${by?.name || "Bạn ấy"} đã bỏ qua lời xin chào lần này.`));
+    socket.on("wave_error", (msg) => showNote(msg));
+    socket.on("wave_declined", ({ by }) => showNote(`${by?.name || "Bạn ấy"} đã bỏ qua lời xin chào lần này.`));
     const addMsg = (sessionId, msg) => setChats(prev => prev.map(c => c.id === sessionId
       ? { ...c, msgs: [...c.msgs, msg], unread: sessionId === activeIdRef.current ? 0 : c.unread + (msg.me ? 0 : 1) } : c));
     socket.on("waiting", () => setSearching(true));
-    socket.on("matched", ({ sessionId, partner }) => {
+    socket.on("matched", ({ sessionId, partner, partnerId }) => {
       setSearching(false);
-      setChats(prev => [...prev, { id: sessionId, partner, msgs: [], typing: false, unread: 0, ended: false }]);
+      setChats(prev => [...prev, { id: sessionId, partner, partnerId, msgs: [], typing: false, unread: 0, ended: false }]);
       setActiveId(sessionId);
     });
     socket.on("receive_message", ({ sessionId, text }) => addMsg(sessionId, { kind: "text", text, me: false }));
@@ -223,11 +229,16 @@ export default function App() {
   );
 
   // ---------- MULTI-CHAT ----------
+  const chattingIds = new Set(chats.filter(c => !c.ended).map(c => c.partnerId).filter(Boolean));
   return (
     <div className="card wide">
-      <header>
-        <div><b>{profile.name}</b> · {GENDER[profile.gender]} · {THIS_YEAR - profile.birthYear} tuổi · {REGION[profile.region]}{profile.location && ` · 📍 ${profile.location}`} {profile.isGuest && "(Khách)"}</div>
-        <button onClick={logout}>Đăng xuất</button>
+      <header className="appheader">
+        <img className="avatar md" src={profile.avatar} alt="" />
+        <div className="headmeta">
+          <b>{profile.name}{profile.isGuest && !profile.name.startsWith("Khách") ? " (Khách)" : ""}</b>
+          <span>{GENDER[profile.gender]} · {THIS_YEAR - profile.birthYear} tuổi · {REGION[profile.region]}{profile.location && ` · 📍 ${profile.location}`}</span>
+        </div>
+        <button className="logoutbtn" onClick={logout}>Đăng xuất</button>
       </header>
 
       {waves.map(w => (
@@ -251,8 +262,10 @@ export default function App() {
             : onlineUsers.map(u => (
               <div key={u.id} className="onlineuser">
                 <img className="avatar sm" src={u.avatar} alt="" />
-                <span className="onlineinfo"><b>{u.name}</b>{u.isGuest ? " (Khách)" : ""} · {GENDER[u.gender]}{u.age ? ` · ${u.age} tuổi` : ""} · {REGION[u.region] || ""}{u.location ? ` · 📍 ${u.location}` : ""}</span>
-                <button className="wavebtn" disabled={!!waved[u.id]} onClick={() => wave(u)}>{waved[u.id] ? "Đã chào ✓" : "👋 Xin chào"}</button>
+                <span className="onlineinfo"><b>{u.name}</b>{u.isGuest && !u.name.startsWith("Khách") ? " (Khách)" : ""} · {GENDER[u.gender]}{u.age ? ` · ${u.age} tuổi` : ""} · {REGION[u.region] || ""}{u.location ? ` · 📍 ${u.location}` : ""}</span>
+                {chattingIds.has(u.id)
+                  ? <span className="chattingtag">Đang chat</span>
+                  : <button className="wavebtn" disabled={!!waved[u.id]} onClick={() => wave(u)}>{waved[u.id] ? "Đã chào ✓" : "👋 Xin chào"}</button>}
               </div>
             ))}
         </div>
@@ -273,8 +286,14 @@ export default function App() {
 
       {active ? (
         <>
-          <div className="partner">Đang chat với: <b>{active.partner.name}</b> · {GENDER[active.partner.gender]}{active.partner.age && ` · ${active.partner.age} tuổi`} · {REGION[active.partner.region] || ""}{active.partner.location && ` · 📍 ${active.partner.location}`} {active.partner.isGuest && "(Khách)"}
-            <img className="avatar sm" src={active.partner.avatar} alt="" /></div>
+          <div className="partnerbar">
+            <img className="avatar md" src={active.partner.avatar} alt="" />
+            <div className="headmeta">
+              <b>{active.partner.name}{active.partner.isGuest && !active.partner.name.startsWith("Khách") ? " (Khách)" : ""}</b>
+              <span>{GENDER[active.partner.gender]}{active.partner.age ? ` · ${active.partner.age} tuổi` : ""} · {REGION[active.partner.region] || ""}{active.partner.location ? ` · 📍 ${active.partner.location}` : ""}</span>
+            </div>
+            <span className={active.ended ? "pstatus off" : "pstatus on"}>{active.ended ? "Đã rời đi" : "Đang chat"}</span>
+          </div>
           {active.ended && <div className="ended">Người lạ đã rời cuộc trò chuyện này. Bạn có thể đóng tab này và chat tiếp ở các tab khác.</div>}
           <div className="msgs">
             {active.msgs.map((m, i) => m.kind === "image"
@@ -285,7 +304,7 @@ export default function App() {
             {active.typing && <div className="msg">Đang gõ...</div>}<div ref={bottomRef} />
           </div>
           {showStickers && <div className="stickers">{STICKERS.map(s => <button key={s} onClick={() => sendSticker(s)}>{s}</button>)}</div>}
-          <div className="row">
+          <div className="row composer">
             <button title="Gửi ảnh" disabled={active.ended} onClick={() => fileRef.current?.click()}>📷</button>
             <button title="Sticker" disabled={active.ended} onClick={() => setShowStickers(v => !v)}>😀</button>
             <input value={text} disabled={active.ended} onChange={e => { setText(e.target.value); socket.emit("typing", { sessionId: active.id, isTyping: true }); }}
@@ -293,7 +312,7 @@ export default function App() {
             <button className="primary" disabled={active.ended} onClick={send}>Gửi</button>
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickImage} />
           </div>
-          <div className="row"><button onClick={() => nextChat(active.id)}>⏭ Người tiếp theo</button><button onClick={() => report(active.id)}>🚩 Báo cáo</button><button onClick={() => closeChat(active.id)}>✖ Đóng cuộc này</button></div>
+          <div className="row actions"><button onClick={() => nextChat(active.id)}>⏭ Người tiếp theo</button><button onClick={() => report(active.id)}>🚩 Báo cáo</button><button onClick={() => closeChat(active.id)}>✖ Đóng cuộc này</button></div>
           <div className="row findmore">
             {searching ? <><span>⏳ Đang tìm thêm người...</span><button onClick={cancelSearch}>Huỷ tìm</button></>
               : chats.length < MAX_CHATS ? <button className="primary" onClick={find}>➕ Tìm thêm người lạ</button>
