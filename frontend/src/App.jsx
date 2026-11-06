@@ -228,113 +228,128 @@ export default function App() {
     </div>
   );
 
-  // ---------- MULTI-CHAT ----------
+  // ---------- MULTI-CHAT (bo cuc kieu nguoila: chat o giua + cot menu ben phai) ----------
   const chattingIds = new Set(chats.filter(c => !c.ended).map(c => c.partnerId).filter(Boolean));
   return (
-    <div className="card wide">
-      <header className="appheader">
-        <img className="avatar md" src={profile.avatar} alt="" />
-        <div className="headmeta">
-          <b>{profile.name}{profile.isGuest && !profile.name.startsWith("Khách") ? " (Khách)" : ""}</b>
-          <span>{GENDER[profile.gender]} · {THIS_YEAR - profile.birthYear} tuổi · {REGION[profile.region]}{profile.location && ` · 📍 ${profile.location}`}</span>
-        </div>
-        <button className="logoutbtn" onClick={logout}>Đăng xuất</button>
-      </header>
+    <div className="shell">
+      <main className="maincol">
+        {waves.map(w => (
+          <div key={w.fromId} className="wavebanner">
+            <img className="avatar sm" src={w.from.avatar} alt="" />
+            <span><b>{w.from.name}</b> 👋 xin chào bạn! · {GENDER[w.from.gender]}{w.from.age ? ` · ${w.from.age} tuổi` : ""} · {REGION[w.from.region] || ""}</span>
+            <button className="primary" onClick={() => acceptWave(w)}>💬 Chat ngay</button>
+            <button onClick={() => declineWave(w)}>Bỏ qua</button>
+          </div>
+        ))}
+        {waveNote && <div className="wavenote" onClick={() => setWaveNote("")}>{waveNote}</div>}
 
-      {waves.map(w => (
-        <div key={w.fromId} className="wavebanner">
-          <img className="avatar sm" src={w.from.avatar} alt="" />
-          <span><b>{w.from.name}</b> 👋 xin chào bạn! · {GENDER[w.from.gender]}{w.from.age ? ` · ${w.from.age} tuổi` : ""} · {REGION[w.from.region] || ""}</span>
-          <button className="primary" onClick={() => acceptWave(w)}>💬 Chat ngay</button>
-          <button onClick={() => declineWave(w)}>Bỏ qua</button>
-        </div>
-      ))}
-      {waveNote && <div className="wavenote" onClick={() => setWaveNote("")}>{waveNote}</div>}
-
-      <div className="onlinebar" onClick={() => setOnlineOpen(v => !v)} role="button" aria-expanded={onlineOpen} title="Bấm để xem ai đang online">
-        <span>🟢 <b>{onlineCount}</b> người đang online{onlineUsers.length > 0 ? ` — ngoài bạn còn ${onlineUsers.length} người` : ""}</span>
-        <span className="chevron">{onlineOpen ? "▴" : "▾"}</span>
-      </div>
-      {onlineOpen && (
-        <div className="onlinelist">
-          {onlineUsers.length === 0
-            ? <small>Chưa có ai khác online lúc này. Chờ một lát hoặc bấm Tìm người lạ nhé.</small>
-            : onlineUsers.map(u => (
-              <div key={u.id} className="onlineuser">
-                <img className="avatar sm" src={u.avatar} alt="" />
-                <span className="onlineinfo"><b>{u.name}</b>{u.isGuest && !u.name.startsWith("Khách") ? " (Khách)" : ""} · {GENDER[u.gender]}{u.age ? ` · ${u.age} tuổi` : ""} · {REGION[u.region] || ""}{u.location ? ` · 📍 ${u.location}` : ""}</span>
-                {chattingIds.has(u.id)
-                  ? <span className="chattingtag">Đang chat</span>
-                  : <button className="wavebtn" disabled={!!waved[u.id]} onClick={() => wave(u)}>{waved[u.id] ? "Đã chào ✓" : "👋 Xin chào"}</button>}
-              </div>
-            ))}
-        </div>
-      )}
-
-      {chats.length > 0 && (
-        <div className="tabs">
+        <div className="tabsbar">
+          <button className="addtab" title={searching ? "Huỷ tìm" : "Tìm người lạ"} onClick={searching ? cancelSearch : (chats.length < MAX_CHATS ? find : undefined)}>
+            <span className="plus">{searching ? "…" : "+"}</span>
+            <small>{searching ? "Đang tìm" : chats.length > 0 ? "Tìm thêm" : "Tìm người"}</small>
+          </button>
           {chats.map(c => (
             <button key={c.id} className={c.id === activeId ? "tab on" : "tab"} onClick={() => openChat(c.id)} title={c.partner.name}>
-              <img src={c.partner.avatar} alt={c.partner.name} />
-              {c.unread > 0 && <span className="badge">{c.unread}</span>}
-              {c.ended && <span className="off">●</span>}
+              <span className="tabimg">
+                <img src={c.partner.avatar} alt={c.partner.name} />
+                {c.unread > 0 && <span className="badge">{c.unread}</span>}
+                {c.ended && <span className="off">●</span>}
+              </span>
+              <small>{c.partner.name}</small>
             </button>
           ))}
           <span className="tabcount">{chats.length}/{MAX_CHATS} cuộc</span>
         </div>
-      )}
 
-      {active ? (
-        <>
-          <div className="partnerbar">
-            <img className="avatar md" src={active.partner.avatar} alt="" />
-            <div className="headmeta">
+        {active ? (
+          <>
+            <div className="partnercenter">
+              <span>Bạn đang chat với</span>
+              <img className="avatar xs" src={active.partner.avatar} alt="" />
               <b>{active.partner.name}{active.partner.isGuest && !active.partner.name.startsWith("Khách") ? " (Khách)" : ""}</b>
-              <span>{GENDER[active.partner.gender]}{active.partner.age ? ` · ${active.partner.age} tuổi` : ""} · {REGION[active.partner.region] || ""}{active.partner.location ? ` · 📍 ${active.partner.location}` : ""}</span>
+              {active.partner.age ? <span>{active.partner.age} tuổi · {REGION[active.partner.region] || ""}</span> : <span>{REGION[active.partner.region] || ""}</span>}
+              <span className={active.ended ? "pstatus off" : "pstatus on"}>{active.ended ? "Đã rời đi" : "Đang chat"}</span>
             </div>
-            <span className={active.ended ? "pstatus off" : "pstatus on"}>{active.ended ? "Đã rời đi" : "Đang chat"}</span>
+            {active.ended && <div className="ended">Người lạ đã rời cuộc trò chuyện này. Bạn có thể đóng tab này và chat tiếp ở các tab khác.</div>}
+            <div className="msgs">
+              <div className="sysnote">Tin nhắn không được lưu trên máy chủ và sẽ biến mất khi bạn rời cuộc trò chuyện. Đừng chia sẻ SĐT, địa chỉ hay mật khẩu — yên tâm chém gió nhé!</div>
+              {active.msgs.map((m, i) => m.kind === "image"
+                ? <div key={i} className={m.me ? "msg me imgmsg" : "msg imgmsg"}><img src={m.data} alt="Ảnh" onClick={() => setLightbox(m.data)} /></div>
+                : m.kind === "sticker"
+                  ? <div key={i} className={m.me ? "msg me sticker" : "msg sticker"}>{m.sticker}</div>
+                  : <div key={i} className={m.me ? "msg me" : "msg"}>{m.text}</div>)}
+              {active.typing && <div className="msg">Đang gõ...</div>}<div ref={bottomRef} />
+            </div>
+            {showStickers && <div className="stickers">{STICKERS.map(s => <button key={s} onClick={() => sendSticker(s)}>{s}</button>)}</div>}
+            <div className="composer2">
+              <button className="iconbtn" title="Gửi ảnh" disabled={active.ended} onClick={() => fileRef.current?.click()}>📷</button>
+              <button className="iconbtn" title="Sticker" disabled={active.ended} onClick={() => setShowStickers(v => !v)}>😀</button>
+              <input className="flatinput" value={text} disabled={active.ended} onChange={e => { setText(e.target.value); socket.emit("typing", { sessionId: active.id, isTyping: true }); }}
+                onKeyDown={e => e.key === "Enter" && send()} placeholder="Hãy nói gì đó đi nào..." />
+              <button className="sendbtn" title="Gửi" disabled={active.ended} onClick={send}>➤</button>
+              <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickImage} />
+            </div>
+          </>
+        ) : (
+          <div className="find">
+            <label>Muốn gặp giới tính: <select value={wantGender} onChange={e => setWantGender(e.target.value)}>
+              <option value="all">Tất cả</option><option value="male">Nam</option><option value="female">Nữ</option><option value="other">Khác</option>
+            </select></label>
+            <label>Ưu tiên khu vực: <select value={wantRegion} onChange={e => setWantRegion(e.target.value)}>
+              <option value="all">Tất cả</option>
+              {Object.entries(REGION).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select></label>
+            {searching ? <><p>⏳ Đang tìm người lạ...</p><button onClick={cancelSearch}>Huỷ</button></>
+              : <button className="primary big" onClick={find}>🔍 Tìm người lạ</button>}
+            {chats.length > 0 && <p>Bạn còn {chats.length} cuộc đã kết thúc ở trên — bấm avatar để xem lại hoặc đóng.</p>}
           </div>
-          {active.ended && <div className="ended">Người lạ đã rời cuộc trò chuyện này. Bạn có thể đóng tab này và chat tiếp ở các tab khác.</div>}
-          <div className="msgs">
-            {active.msgs.map((m, i) => m.kind === "image"
-              ? <div key={i} className={m.me ? "msg me imgmsg" : "msg imgmsg"}><img src={m.data} alt="Ảnh" onClick={() => setLightbox(m.data)} /></div>
-              : m.kind === "sticker"
-                ? <div key={i} className={m.me ? "msg me sticker" : "msg sticker"}>{m.sticker}</div>
-                : <div key={i} className={m.me ? "msg me" : "msg"}>{m.text}</div>)}
-            {active.typing && <div className="msg">Đang gõ...</div>}<div ref={bottomRef} />
-          </div>
-          {showStickers && <div className="stickers">{STICKERS.map(s => <button key={s} onClick={() => sendSticker(s)}>{s}</button>)}</div>}
-          <div className="row composer">
-            <button title="Gửi ảnh" disabled={active.ended} onClick={() => fileRef.current?.click()}>📷</button>
-            <button title="Sticker" disabled={active.ended} onClick={() => setShowStickers(v => !v)}>😀</button>
-            <input value={text} disabled={active.ended} onChange={e => { setText(e.target.value); socket.emit("typing", { sessionId: active.id, isTyping: true }); }}
-              onKeyDown={e => e.key === "Enter" && send()} placeholder="Nhập tin nhắn..." />
-            <button className="primary" disabled={active.ended} onClick={send}>Gửi</button>
-            <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickImage} />
-          </div>
-          <div className="row actions"><button onClick={() => nextChat(active.id)}>⏭ Người tiếp theo</button><button onClick={() => report(active.id)}>🚩 Báo cáo</button><button onClick={() => closeChat(active.id)}>✖ Đóng cuộc này</button></div>
-          <div className="row findmore">
-            {searching ? <><span>⏳ Đang tìm thêm người...</span><button onClick={cancelSearch}>Huỷ tìm</button></>
-              : chats.length < MAX_CHATS ? <button className="primary" onClick={find}>➕ Tìm thêm người lạ</button>
-              : <span>Đã đạt tối đa {MAX_CHATS} cuộc cùng lúc</span>}
-          </div>
-        </>
-      ) : (
-        <div className="find">
-          <label>Muốn gặp giới tính: <select value={wantGender} onChange={e => setWantGender(e.target.value)}>
-            <option value="all">Tất cả</option><option value="male">Nam</option><option value="female">Nữ</option><option value="other">Khác</option>
-          </select></label>
-          <label>Ưu tiên khu vực: <select value={wantRegion} onChange={e => setWantRegion(e.target.value)}>
-            <option value="all">Tất cả</option>
-            {Object.entries(REGION).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select></label>
-          {searching ? <><p>⏳ Đang tìm người lạ...</p><button onClick={cancelSearch}>Huỷ</button></>
-            : <button className="primary big" onClick={find}>🔍 Tìm người lạ</button>}
-          {chats.length > 0 && <p>Bạn còn {chats.length} cuộc đã kết thúc ở trên — bấm avatar để xem lại hoặc đóng.</p>}
+        )}
+      </main>
+
+      <aside className="sidecol">
+        <div className="sideprofile">
+          <img className="avatar lg" src={profile.avatar} alt="" />
+          <b>{profile.name}{profile.isGuest && !profile.name.startsWith("Khách") ? " (Khách)" : ""}</b>
+          <span>{GENDER[profile.gender]} · {THIS_YEAR - profile.birthYear} tuổi · {REGION[profile.region]}{profile.location ? ` · 📍 ${profile.location}` : ""}</span>
         </div>
-      )}
+
+        <div>
+          <div className="onlinebar" onClick={() => setOnlineOpen(v => !v)} role="button" aria-expanded={onlineOpen} title="Bấm để xem ai đang online">
+            <span>🟢 <b>{onlineCount}</b> người đang online{onlineUsers.length > 0 ? ` — còn ${onlineUsers.length} người` : ""}</span>
+            <span className="chevron">{onlineOpen ? "▴" : "▾"}</span>
+          </div>
+          {onlineOpen && (
+            <div className="onlinelist">
+              {onlineUsers.length === 0
+                ? <small>Chưa có ai khác online lúc này. Chờ một lát hoặc bấm Tìm người lạ nhé.</small>
+                : onlineUsers.map(u => (
+                  <div key={u.id} className="onlineuser">
+                    <img className="avatar sm" src={u.avatar} alt="" />
+                    <span className="onlineinfo"><b>{u.name}</b>{u.isGuest && !u.name.startsWith("Khách") ? " (Khách)" : ""} · {GENDER[u.gender]}{u.age ? ` · ${u.age} tuổi` : ""} · {REGION[u.region] || ""}{u.location ? ` · 📍 ${u.location}` : ""}</span>
+                    {chattingIds.has(u.id)
+                      ? <span className="chattingtag">Đang chat</span>
+                      : <button className="wavebtn" disabled={!!waved[u.id]} onClick={() => wave(u)}>{waved[u.id] ? "Đã chào ✓" : "👋 Xin chào"}</button>}
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+
+        <nav className="sidemenu">
+          <button onClick={() => setProfile(null)}>✏️ Chỉnh sửa hồ sơ</button>
+          <button disabled={!active || active.ended} onClick={() => active && nextChat(active.id)}>⏭ Người tiếp theo</button>
+          <button disabled={!active} onClick={() => active && report(active.id)}>🚩 Báo xấu</button>
+          <button disabled={!active} onClick={() => active && closeChat(active.id)}>✖ Thoát trò chuyện</button>
+          <button onClick={logout}>🚪 Đăng xuất</button>
+        </nav>
+
+        <div className="sidefoot">
+          <a href="/privacy.html" target="_blank" rel="noreferrer">Chính sách riêng tư</a> · Chỉ dành cho người 18+<br />
+          Tin nhắn không được lưu trên máy chủ.
+        </div>
+      </aside>
+
       {lightbox && <div className="lightbox" onClick={() => setLightbox(null)}><img src={lightbox} alt="Ảnh phóng to" /></div>}
-      <small>⚠️ Không chia sẻ SĐT, địa chỉ nhà, mật khẩu. Tin nhắn không được lưu trên máy chủ.</small>
     </div>
   );
 }

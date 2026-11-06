@@ -82,3 +82,55 @@ small{color:#65676b;text-align:center}
 .wavebanner span{flex:1;min-width:160px}
 .wavebanner button{padding:8px 14px;font-size:13px}
 .wavenote{background:#e7f3ff;border-radius:12px;padding:8px 12px;font-size:13px;cursor:pointer;color:#050505}
+
+/* ===== Bo cuc kieu nguoila: khung chat o giua + cot menu ben phai ===== */
+.shell{display:grid;grid-template-columns:minmax(0,1fr) 300px;width:100%;max-width:1120px;height:94vh;background:#fff;border:1px solid #dddfe2;border-radius:20px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+.maincol{display:flex;flex-direction:column;gap:10px;padding:16px 20px 12px;min-width:0;min-height:0}
+.sidecol{background:#f7f7f8;border-left:1px solid #e4e6eb;padding:22px 18px;display:flex;flex-direction:column;gap:16px;overflow:auto}
+.avatar.lg{width:84px;height:84px;border-radius:50%}
+.avatar.xs{width:26px;height:26px;border-radius:50%}
+.sideprofile{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
+.sideprofile b{font-size:16px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sideprofile span{font-size:12.5px;color:#65676b}
+.sidecol .onlinelist{margin-top:8px}
+.sidemenu{display:flex;flex-direction:column;border-top:1px solid #e4e6eb;padding-top:8px}
+.sidemenu button{display:flex;align-items:center;gap:10px;background:transparent;border-radius:10px;padding:11px 10px;font-weight:500;font-size:14.5px;text-align:left;color:#050505}
+.sidemenu button:hover{background:#eceef1;filter:none}
+.sidemenu button:disabled{opacity:.4}
+.sidefoot{margin-top:auto;font-size:12px;color:#65676b;text-align:center;line-height:1.6}
+.sidefoot a{color:#0084ff;text-decoration:none}
+.tabsbar{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.addtab{display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;padding:0;border-radius:0}
+.addtab .plus{width:46px;height:46px;border-radius:50%;border:1.6px dashed #a7b0be;color:#66707c;font-size:23px;line-height:1;display:flex;align-items:center;justify-content:center;background:#fff}
+.addtab small{font-size:11px;color:#65676b;font-weight:500}
+.addtab:hover{filter:none}
+.addtab:hover .plus{border-color:#0084ff;color:#0084ff}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;padding:0;border-radius:0;max-width:64px}
+.tab:hover{filter:none}
+.tab .tabimg{position:relative;line-height:0}
+.tab img{width:46px;height:46px;border-radius:50%;border:2px solid transparent}
+.tab.on img{border-color:#0084ff}
+.tab small{font-size:11px;color:#65676b;font-weight:500;max-width:60px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tab.on small{color:#0084ff;font-weight:700}
+.tab .badge{position:absolute;top:-4px;right:-4px;background:#f02849;color:#fff;font-size:11px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.tab .off{position:absolute;bottom:0;right:0;color:#999;font-size:10px}
+.tabsbar .tabcount{margin-left:auto;align-self:center}
+.partnercenter{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;font-size:13.5px;color:#444c5e;border-bottom:1px solid #eef0f3;padding-bottom:10px;text-align:center}
+.sysnote{text-align:center;color:#8a8f98;font-size:12.5px;line-height:1.5;padding:0 24px 6px;max-width:640px;margin:0 auto}
+.maincol .msgs{border:0;padding:10px 2px}
+.composer2{display:flex;align-items:center;gap:2px;border-top:1px solid #e4e6eb;padding-top:6px}
+.composer2 .iconbtn{background:transparent;width:40px;height:40px;border-radius:50%;font-size:19px;padding:0;flex-shrink:0}
+.composer2 .sendbtn{background:transparent;color:#0084ff;font-size:21px;width:42px;height:42px;padding:0;flex-shrink:0}
+.composer2 .sendbtn:disabled{color:#b6bcc4;opacity:1}
+.flatinput{flex:1;background:transparent;border:0;border-radius:0;padding:12px 8px;font-size:15px}
+.flatinput:focus{background:transparent;border:0;box-shadow:none}
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);height:96vh;border-radius:16px}
+  .sidecol{order:-1;border-left:0;border-bottom:1px solid #e4e6eb;padding:12px 14px;gap:10px;overflow:visible}
+  .sideprofile{flex-direction:row;text-align:left;gap:10px}
+  .sideprofile .avatar.lg{width:40px;height:40px}
+  .sideprofile b{font-size:14.5px}
+  .sidemenu,.sidefoot{display:none}
+  .maincol{padding:12px 14px 10px;min-height:0}
+  .sysnote{padding:0 6px 6px}
+}
