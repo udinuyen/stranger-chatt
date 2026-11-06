@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Bàn Cờ Vua Tự Động</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Noto+Sans+Symbols+2&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <h1>♞ Bàn Cờ Vua Tự Động</h1>
+        <p>Hai máy tự đánh với nhau — bạn chỉ cần bấm chạy và ngồi xem.</p>
+      </header>
+
+      <div class="statusbar">
+        <span class="turn-dot" id="turnDot" aria-hidden="true"></span>
+        <span class="status-text" id="statusText">Sẵn sàng</span>
+        <span class="status-sub" id="statusSub">Bấm “Bắt đầu” để hai máy thi đấu.</span>
+        <span class="thinking" id="thinking"><span class="spin"></span>Máy đang nghĩ…</span>
+      </div>
+
+      <div class="layout">
+        <section class="board-frame" aria-label="Bàn cờ">
+          <div class="player-row">
+            <span class="player-badge" id="topBadge">♟</span>
+            <span class="player-name" id="topName">Máy Đen<span class="elo">tự động</span></span>
+            <span class="captured" id="topCaptured"></span>
+          </div>
+          <div class="board-and-eval">
+            <div class="evalbar" title="Thang đánh giá thế cờ (trắng ở dưới)" aria-hidden="true"><div class="white-part" id="evalWhite"></div></div>
+            <div class="board" id="board" role="img" aria-label="Bàn cờ vua"></div>
+          </div>
+          <div class="player-row bottom">
+            <span class="player-badge" id="bottomBadge">♟</span>
+            <span class="player-name" id="bottomName">Máy Trắng<span class="elo">tự động</span></span>
+            <span class="captured" id="bottomCaptured"></span>
+          </div>
+          <div class="result-banner" id="resultBanner"></div>
+        </section>
+
+        <aside class="side">
+          <div class="card">
+            <h2>Điều khiển</h2>
+            <div class="controls">
+              <button class="primary" id="btnPlay">▶ Bắt đầu</button>
+              <button id="btnStep">⏭ Đi 1 nước</button>
+              <button id="btnFlip">🔄 Lật bàn</button>
+              <button id="btnNew" style="grid-column: 1 / -1;">♟ Ván mới</button>
+            </div>
+            <div class="field">
+              <label for="speed">Tốc độ đánh <output id="speedOut">1 nước / giây</output></label>
+              <input type="range" id="speed" min="0" max="100" value="45" />
+            </div>
+            <div class="field">
+              <label for="level">Độ khó của máy</label>
+              <select id="level">
+                <option value="1">Dễ — đánh nhanh, ngẫu hứng</option>
+                <option value="2" selected>Trung bình — tính 2 nước</option>
+                <option value="3">Khó — tính 3 nước</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Diễn biến ván cờ</h2>
+            <div class="stats" style="margin-bottom: 12px;">
+              <div class="stat"><b id="statMoves">0</b><span>Nước đi</span></div>
+              <div class="stat"><b id="statCaps">0</b><span>Quân bị ăn</span></div>
+              <div class="stat"><b id="statEval">0.0</b><span>Ưu thế</span></div>
+            </div>
+            <div class="moves" id="moves"><span class="empty">Chưa có nước đi nào.</span></div>
+          </div>
+        </aside>
+      </div>
+
+      <footer class="note">
+        Máy dùng thuật toán tìm kiếm minimax với cắt tỉa alpha-beta và bảng điểm vị trí quân — đánh đúng luật chuẩn:
+        nhập thành, bắt tốt qua đường, phong cấp, chiếu hết, hết nước đi (pat) và hòa theo luật 50 nước / lặp lại thế cờ 3 lần.
+        Đổi độ khó hoặc tốc độ bất cứ lúc nào, ván cờ vẫn tiếp tục bình thường.
+      </footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

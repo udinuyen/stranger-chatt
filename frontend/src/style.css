@@ -124,6 +124,20 @@ small{color:#65676b;text-align:center}
 .composer2 .sendbtn:disabled{color:#b6bcc4;opacity:1}
 .flatinput{flex:1;background:transparent;border:0;border-radius:0;padding:12px 8px;font-size:15px}
 .flatinput:focus{background:transparent;border:0;box-shadow:none}
+/* ===== Co vua tu dong (may vs may, iframe /chess/) ===== */
+.chesstab{display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;padding:0;border-radius:0}
+.chesstab .chessicon{width:46px;height:46px;border-radius:50%;background:#0084ff;color:#fff;font-size:22px;line-height:1;display:flex;align-items:center;justify-content:center}
+.chesstab small{font-size:11px;color:#65676b;font-weight:500}
+.chesstab:hover{filter:none}
+.chesstab:hover .chessicon{filter:brightness(1.08)}
+.chesstab:hover small{color:#0084ff}
+.chessscreen{display:flex;flex-direction:column;width:100%;max-width:1120px;height:94vh;background:#fff;border:1px solid #dddfe2;border-radius:20px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+.chesshead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #e4e6eb;background:#fff}
+.chesshead b{font-size:17px;color:#050505}
+.chesshead span{font-size:13px;color:#65676b}
+.chessback{background:#0084ff;color:#fff;padding:10px 16px;font-size:14px;flex-shrink:0}
+.chessback:hover{filter:brightness(1.08)}
+.chessframe{flex:1;width:100%;min-height:0;border:0;background:#fff;display:block}
 @media (max-width:860px){
   .shell{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);height:96vh;border-radius:16px}
   .sidecol{order:-1;border-left:0;border-bottom:1px solid #e4e6eb;padding:12px 14px;gap:10px;overflow:visible}
@@ -133,4 +147,9 @@ small{color:#65676b;text-align:center}
   .sidemenu,.sidefoot{display:none}
   .maincol{padding:12px 14px 10px;min-height:0}
   .sysnote{padding:0 6px 6px}
+  .chessscreen{height:96vh;border-radius:16px}
+  .chesshead{padding:10px 12px;gap:8px}
+  .chesshead b{font-size:15px}
+  .chesshead span{font-size:12px}
+  .chessback{padding:9px 13px;font-size:13px}
 }

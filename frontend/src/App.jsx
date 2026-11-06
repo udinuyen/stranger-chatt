@@ -38,6 +38,7 @@ export default function App() {
   const [text, setText] = useState("");
   const [showStickers, setShowStickers] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const [showChess, setShowChess] = useState(false);
   const [lightbox, setLightbox] = useState(null);
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
@@ -146,6 +147,20 @@ export default function App() {
     img.src = url;
   };
 
+  // ---------- MAN CO VUA TU DONG (may vs may, trang tinh trong /chess/) ----------
+  // Hien thi ngay trong app: chat van chay nen o phia sau (socket khong bi ngat),
+  // chi iframe bi go khi dong man co nen van dang xem se bat dau lai lan mo sau.
+  if (showChess) return (
+    <div className="chessscreen">
+      <div className="chesshead">
+        <button className="chessback" onClick={() => setShowChess(false)}>← Quay lại chat</button>
+        <b>♟️ Cờ vua tự động</b>
+        <span>Trắng AI vs Đen AI — hai máy tự đánh với nhau</span>
+      </div>
+      <iframe className="chessframe" src="/chess/index.html" title="Bàn cờ vua tự động — máy trắng đấu máy đen" />
+    </div>
+  );
+
   // ---------- LANDING PAGE ----------
   if (!user) return (
     <div className="landing">
@@ -156,6 +171,7 @@ export default function App() {
         <button className="primary big" onClick={loginGoogle}>Đăng nhập bằng Google</button>
         <button className="big" onClick={loginGuest}>Vào nhanh với tư cách Khách</button>
         <button className="dlbtn" onClick={() => setShowQr(true)}>📱 Tải app Android (APK)</button>
+        <button className="big" onClick={() => setShowChess(true)}>♟️ Cờ vua — xem 2 máy tự đánh</button>
         <small>Bấm nút tải app sẽ hiện mã QR — quét bằng điện thoại để mở StrangerChat ngay trên điện thoại. iPhone cứ dùng bản web này là chat chung được với mọi người.</small>
         <small>Chỉ dành cho người từ 18 tuổi trở lên.</small>
       </div>
@@ -224,6 +240,7 @@ export default function App() {
       )}
 
       <button className="primary" onClick={saveProfile}>Tiếp tục</button>
+      <button onClick={() => setShowChess(true)}>♟️ Cờ vua — xem 2 máy tự đánh</button>
       <button onClick={logout}>Đăng xuất</button>
     </div>
   );
@@ -247,6 +264,10 @@ export default function App() {
           <button className="addtab" title={searching ? "Huỷ tìm" : "Tìm người lạ"} onClick={searching ? cancelSearch : (chats.length < MAX_CHATS ? find : undefined)}>
             <span className="plus">{searching ? "…" : "+"}</span>
             <small>{searching ? "Đang tìm" : chats.length > 0 ? "Tìm thêm" : "Tìm người"}</small>
+          </button>
+          <button className="chesstab" title="Cờ vua tự động — xem 2 máy tự đánh" onClick={() => setShowChess(true)}>
+            <span className="chessicon">♟️</span>
+            <small>Cờ vua</small>
           </button>
           {chats.map(c => (
             <button key={c.id} className={c.id === activeId ? "tab on" : "tab"} onClick={() => openChat(c.id)} title={c.partner.name}>
@@ -336,6 +357,7 @@ export default function App() {
         </div>
 
         <nav className="sidemenu">
+          <button onClick={() => setShowChess(true)}>♟️ Cờ vua</button>
           <button onClick={() => setProfile(null)}>✏️ Chỉnh sửa hồ sơ</button>
           <button disabled={!active || active.ended} onClick={() => active && nextChat(active.id)}>⏭ Người tiếp theo</button>
           <button disabled={!active} onClick={() => active && report(active.id)}>🚩 Báo xấu</button>
