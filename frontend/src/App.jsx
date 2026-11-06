@@ -39,6 +39,7 @@ export default function App() {
   const [showStickers, setShowStickers] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [showChess, setShowChess] = useState(false);
+  const [showEnglish, setShowEnglish] = useState(false);
   const [lightbox, setLightbox] = useState(null);
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
@@ -161,6 +162,19 @@ export default function App() {
     </div>
   );
 
+  // ---------- MAN HOC TIENG ANH (nghe & go lai TOEIC, trang tinh trong /english/) ----------
+  // Cung mau voi man co vua: chat van chay nen o phia sau, dong man thi quay lai chat.
+  if (showEnglish) return (
+    <div className="chessscreen">
+      <div className="chesshead">
+        <button className="chessback" onClick={() => setShowEnglish(false)}>← Quay lại chat</button>
+        <b>🎧 Học tiếng Anh</b>
+        <span>Nghe và gõ lại — TOEIC Dictation, 4 bài / 32 câu</span>
+      </div>
+      <iframe className="chessframe englishframe" src="/english/index.html" title="Học tiếng Anh — nghe và gõ lại TOEIC" />
+    </div>
+  );
+
   // ---------- LANDING PAGE ----------
   if (!user) return (
     <div className="landing">
@@ -172,6 +186,7 @@ export default function App() {
         <button className="big" onClick={loginGuest}>Vào nhanh với tư cách Khách</button>
         <button className="dlbtn" onClick={() => setShowQr(true)}>📱 Tải app Android (APK)</button>
         <button className="big" onClick={() => setShowChess(true)}>♟️ Cờ vua — xem 2 máy tự đánh</button>
+        <button className="big" onClick={() => setShowEnglish(true)}>🎧 Học tiếng Anh — nghe & gõ TOEIC</button>
         <small>Bấm nút tải app sẽ hiện mã QR — quét bằng điện thoại để mở StrangerChat ngay trên điện thoại. iPhone cứ dùng bản web này là chat chung được với mọi người.</small>
         <small>Chỉ dành cho người từ 18 tuổi trở lên.</small>
       </div>
@@ -241,6 +256,7 @@ export default function App() {
 
       <button className="primary" onClick={saveProfile}>Tiếp tục</button>
       <button onClick={() => setShowChess(true)}>♟️ Cờ vua — xem 2 máy tự đánh</button>
+      <button onClick={() => setShowEnglish(true)}>🎧 Học tiếng Anh — nghe & gõ TOEIC</button>
       <button onClick={logout}>Đăng xuất</button>
     </div>
   );
@@ -268,6 +284,10 @@ export default function App() {
           <button className="chesstab" title="Cờ vua tự động — xem 2 máy tự đánh" onClick={() => setShowChess(true)}>
             <span className="chessicon">♟️</span>
             <small>Cờ vua</small>
+          </button>
+          <button className="engtab" title="Học tiếng Anh — nghe và gõ lại TOEIC" onClick={() => setShowEnglish(true)}>
+            <span className="engicon">🎧</span>
+            <small>Tiếng Anh</small>
           </button>
           {chats.map(c => (
             <button key={c.id} className={c.id === activeId ? "tab on" : "tab"} onClick={() => openChat(c.id)} title={c.partner.name}>
@@ -358,6 +378,7 @@ export default function App() {
 
         <nav className="sidemenu">
           <button onClick={() => setShowChess(true)}>♟️ Cờ vua</button>
+          <button onClick={() => setShowEnglish(true)}>🎧 Học tiếng Anh</button>
           <button onClick={() => setProfile(null)}>✏️ Chỉnh sửa hồ sơ</button>
           <button disabled={!active || active.ended} onClick={() => active && nextChat(active.id)}>⏭ Người tiếp theo</button>
           <button disabled={!active} onClick={() => active && report(active.id)}>🚩 Báo xấu</button>
