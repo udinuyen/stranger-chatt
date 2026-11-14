@@ -127,6 +127,18 @@
       .opt.wrong .letter { background: var(--red); border-color: var(--red); color: #fff; }
       .opt.dim { opacity: 0.55; }
       .opt:disabled { cursor: default; }
+      .opt-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+      .opt-en { font-weight: 600; line-height: 1.3; overflow-wrap: break-word; }
+      .opt-ipa {
+        font-size: 14.5px;
+        line-height: 1.35;
+        color: var(--muted);
+        font-weight: 400;
+        letter-spacing: 0.01em;
+        overflow-wrap: break-word;
+      }
+      .opt.correct .opt-ipa { color: #9fd8a8; }
+      .opt.wrong .opt-ipa { color: #f0a9a3; }
 
       .feedback {
         min-height: 1.5em;
@@ -201,37 +213,37 @@
     </main>
 
     <script>
-      // 29 từ vựng từ phần Key vocabulary của 4 bài nghe cũ
+      // 29 từ vựng từ phần Key vocabulary của 4 bài nghe cũ — kèm phiên âm IPA (Anh–Mỹ)
       var WORDS = [
-        { en: "out of the office", vi: "vắng mặt tại văn phòng" },
-        { en: "limited access", vi: "quyền truy cập hạn chế" },
-        { en: "urgent", vi: "khẩn cấp" },
-        { en: "assistant", vi: "trợ lý" },
-        { en: "sales department", vi: "phòng kinh doanh" },
-        { en: "get back to you", vi: "phản hồi lại cho bạn" },
-        { en: "look forward to", vi: "mong đợi, trông chờ" },
-        { en: "annual", vi: "thường niên, hằng năm" },
-        { en: "be held", vi: "được tổ chức" },
-        { en: "provide", vi: "cung cấp" },
-        { en: "sunscreen", vi: "kem chống nắng" },
-        { en: "sign up", vi: "đăng ký" },
-        { en: "front desk", vi: "quầy lễ tân" },
-        { en: "in case of", vi: "trong trường hợp" },
-        { en: "outdoors", vi: "ngoài trời" },
-        { en: "patience", vi: "sự kiên nhẫn" },
-        { en: "be delayed", vi: "bị hoãn, bị trễ" },
-        { en: "departure", vi: "sự khởi hành" },
-        { en: "meal voucher", vi: "phiếu ăn" },
-        { en: "connecting flight", vi: "chuyến bay nối chuyến" },
-        { en: "rebook", vi: "đặt lại (vé)" },
-        { en: "apologize", vi: "xin lỗi" },
-        { en: "inconvenience", vi: "sự bất tiện" },
-        { en: "get in shape", vi: "lấy lại vóc dáng" },
-        { en: "downtown", vi: "trung tâm thành phố" },
-        { en: "equipment", vi: "thiết bị, dụng cụ" },
-        { en: "enrollment fee", vi: "phí ghi danh" },
-        { en: "session", vi: "buổi (tập, học)" },
-        { en: "coach", vi: "huấn luyện viên" }
+        { en: "out of the office", vi: "vắng mặt tại văn phòng", ipa: "/aʊt əv ði ˈɔːfɪs/" },
+        { en: "limited access", vi: "quyền truy cập hạn chế", ipa: "/ˈlɪmɪtɪd ˈækses/" },
+        { en: "urgent", vi: "khẩn cấp", ipa: "/ˈɜːrdʒənt/" },
+        { en: "assistant", vi: "trợ lý", ipa: "/əˈsɪstənt/" },
+        { en: "sales department", vi: "phòng kinh doanh", ipa: "/seɪlz dɪˈpɑːrtmənt/" },
+        { en: "get back to you", vi: "phản hồi lại cho bạn", ipa: "/ɡet ˈbæk tə juː/" },
+        { en: "look forward to", vi: "mong đợi, trông chờ", ipa: "/lʊk ˈfɔːrwərd tə/" },
+        { en: "annual", vi: "thường niên, hằng năm", ipa: "/ˈænjuəl/" },
+        { en: "be held", vi: "được tổ chức", ipa: "/biː held/" },
+        { en: "provide", vi: "cung cấp", ipa: "/prəˈvaɪd/" },
+        { en: "sunscreen", vi: "kem chống nắng", ipa: "/ˈsʌnskriːn/" },
+        { en: "sign up", vi: "đăng ký", ipa: "/saɪn ˈʌp/" },
+        { en: "front desk", vi: "quầy lễ tân", ipa: "/ˌfrʌnt ˈdesk/" },
+        { en: "in case of", vi: "trong trường hợp", ipa: "/ɪn ˈkeɪs əv/" },
+        { en: "outdoors", vi: "ngoài trời", ipa: "/ˌaʊtˈdɔːrz/" },
+        { en: "patience", vi: "sự kiên nhẫn", ipa: "/ˈpeɪʃəns/" },
+        { en: "be delayed", vi: "bị hoãn, bị trễ", ipa: "/biː dɪˈleɪd/" },
+        { en: "departure", vi: "sự khởi hành", ipa: "/dɪˈpɑːrtʃər/" },
+        { en: "meal voucher", vi: "phiếu ăn", ipa: "/ˈmiːl ˌvaʊtʃər/" },
+        { en: "connecting flight", vi: "chuyến bay nối chuyến", ipa: "/kəˈnektɪŋ flaɪt/" },
+        { en: "rebook", vi: "đặt lại (vé)", ipa: "/ˌriːˈbʊk/" },
+        { en: "apologize", vi: "xin lỗi", ipa: "/əˈpɑːlədʒaɪz/" },
+        { en: "inconvenience", vi: "sự bất tiện", ipa: "/ˌɪnkənˈviːniəns/" },
+        { en: "get in shape", vi: "lấy lại vóc dáng", ipa: "/ɡet ɪn ˈʃeɪp/" },
+        { en: "downtown", vi: "trung tâm thành phố", ipa: "/ˌdaʊnˈtaʊn/" },
+        { en: "equipment", vi: "thiết bị, dụng cụ", ipa: "/ɪˈkwɪpmənt/" },
+        { en: "enrollment fee", vi: "phí ghi danh", ipa: "/ɪnˈroʊlmənt fiː/" },
+        { en: "session", vi: "buổi (tập, học)", ipa: "/ˈseʃn/" },
+        { en: "coach", vi: "huấn luyện viên", ipa: "/koʊtʃ/" }
       ];
       var ROUND = 10;
 
@@ -280,7 +292,9 @@
           var b = document.createElement("button");
           b.type = "button";
           b.className = "opt";
-          b.innerHTML = '<span class="letter">' + letters[k] + '</span><span>' + esc(opt.en) + "</span>";
+          b.innerHTML = '<span class="letter">' + letters[k] + '</span>' +
+            '<span class="opt-main"><span class="opt-en">' + esc(opt.en) + '</span>' +
+            '<span class="opt-ipa">' + esc(opt.ipa) + "</span></span>";
           b.addEventListener("click", function () { answer(b, opt); });
           box.appendChild(b);
         });
@@ -302,10 +316,10 @@
         if (correct) {
           quiz.score++;
           fb.className = "feedback ok";
-          fb.textContent = "Đúng rồi! “" + q.item.en + "” = " + q.item.vi + ".";
+          fb.textContent = "Đúng rồi! “" + q.item.en + "” " + q.item.ipa + " = " + q.item.vi + ".";
         } else {
           fb.className = "feedback bad";
-          fb.textContent = "Chưa đúng. Đáp án đúng là “" + q.item.en + "”.";
+          fb.textContent = "Chưa đúng. Đáp án đúng là “" + q.item.en + "” " + q.item.ipa + ".";
         }
         $("quizScore").innerHTML = "Điểm: <b>" + quiz.score + "</b>";
         $("quizBarFill").style.width = Math.round((quiz.i + 1) / quiz.questions.length * 100) + "%";
