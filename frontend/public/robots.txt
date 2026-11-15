@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://stranger-chatt.vercel.app/sitemap.xml
+Sitemap: https://lamquennguoila.vercel.app/sitemap.xml
