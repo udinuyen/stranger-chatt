@@ -160,3 +160,76 @@ small{color:#65676b;text-align:center}
   .chesshead span{font-size:12px}
   .chessback{padding:9px 13px;font-size:13px}
 }
+
+/* ===== REDESIGN V2 (2026-11-15) — theo preview da duoc user duyet ===== */
+body{background:linear-gradient(135deg,#dbeafe,#e0e7ff 45%,#f0f2f5)}
+button.primary{background:linear-gradient(135deg,#2563eb,#0284c7)}
+.card{border-radius:24px;box-shadow:0 16px 40px rgba(30,64,175,.14)}
+.shell{grid-template-columns:minmax(0,1fr) 320px;border-radius:28px;border:0;box-shadow:0 24px 60px rgba(30,64,175,.22),0 4px 16px rgba(0,0,0,.08)}
+.maincol{background:radial-gradient(600px 300px at 20% -5%,#eff6ff,transparent),#fff;padding:18px 24px 14px}
+.brand{font-weight:800;font-size:17px;color:#0f172a;align-self:center;margin-right:2px;white-space:nowrap}
+.brand span{color:#2563eb}
+.tabsbar{align-items:center;gap:10px;background:#f8fafc;border:1px solid #eef2f7;border-radius:18px;padding:8px 10px}
+.tabsbar .tabcount{background:#fff;border:1px solid #e2e8f0;padding:6px 11px;border-radius:999px;font-weight:600;font-size:12.5px;color:#64748b}
+.addtab{flex-direction:row;align-items:center;gap:8px;background:#2563eb;border-radius:999px;padding:6px 14px 6px 6px;box-shadow:0 6px 16px rgba(37,99,235,.32)}
+.addtab .plus{width:30px;height:30px;border:0;background:rgba(255,255,255,.22);color:#fff;font-size:19px}
+.addtab small{font-size:13.5px;color:#fff;font-weight:600}
+.addtab:hover .plus{border-color:transparent;color:#fff}
+.chesstab,.engtab{flex-direction:row;align-items:center;gap:8px;background:#f1f5f9;border-radius:999px;padding:6px 14px 6px 6px}
+.chesstab .chessicon,.engtab .engicon{width:30px;height:30px;font-size:15px}
+.chesstab .chessicon{background:#dbeafe;color:inherit}
+.engtab .engicon{background:#dcfce7;color:inherit}
+.chesstab small,.engtab small{font-size:13.5px;color:#334155;font-weight:600}
+.tab small{font-size:11px}
+/* --- Man tim nguoi (hero) --- */
+.find{gap:14px;width:100%;max-width:560px;margin:auto;align-self:center}
+.findhero{display:flex;flex-direction:column;align-items:center;gap:0}
+.findillus{width:104px;height:104px;border-radius:32px;background:linear-gradient(135deg,#2563eb,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:48px;box-shadow:0 16px 34px rgba(37,99,235,.35);margin-bottom:16px}
+.findhero h2{font-size:27px;margin:0 0 8px;letter-spacing:-.02em;color:#0f172a}
+.findhero p{margin:0;color:#64748b;font-size:14.5px;line-height:1.55;max-width:430px}
+.readypill{display:inline-flex;align-items:center;gap:7px;margin-top:14px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px}
+.greendot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18);flex-shrink:0}
+.filtercard{width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:20px;padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.find .filtercard label{font-size:12.5px;font-weight:700;color:#475569;gap:6px}
+.filtercard select{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:11px 12px;font-weight:600;color:#0f172a}
+.findcta{width:100%;border-radius:16px!important;padding:17px!important;font-size:17.5px!important;font-weight:800;box-shadow:0 12px 26px rgba(37,99,235,.38)}
+.findcta.cancel{background:#e4e6eb;color:#0f172a;box-shadow:none;font-size:15px!important;padding:13px!important}
+.searchingnote{font-size:16px;margin:2px 0}
+.tips{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;text-align:left}
+.tip{background:#f8fafc;border:1px solid #eef2f7;border-radius:16px;padding:12px 14px;font-size:12.8px;color:#475569;line-height:1.45}
+.tip b{display:block;color:#0f172a;font-size:13.5px;margin-bottom:2px}
+/* --- Cot phai --- */
+.sidecol{background:#f8fafc;padding:20px 18px;gap:12px}
+.sideprofile{background:#fff;border:1px solid #e5e7eb;border-radius:22px;padding:20px 16px 16px;box-shadow:0 4px 14px rgba(15,23,42,.05);gap:6px}
+.profring{width:92px;height:92px;border-radius:50%;padding:3px;background:linear-gradient(135deg,#2563eb,#06b6d4);flex-shrink:0}
+.profring .avatar.lg{width:100%;height:100%;border:3px solid #fff;display:block}
+.sideprofile b{font-size:17px}
+.chips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:5px}
+.chip{font-size:12px;font-weight:600;background:#eff6ff;color:#1d4ed8;padding:5px 10px;border-radius:999px}
+.chip.grey{background:#f1f5f9;color:#475569}
+.onlinebar{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:12px 15px;box-shadow:none}
+.menugroup{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin:6px 4px -2px}
+.sidemenu.cardmenu{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;padding-top:0}
+.sidemenu.cardmenu button{padding:11px 14px;border-bottom:1px solid #f1f5f9;border-radius:0;gap:11px}
+.sidemenu.cardmenu button:last-child{border-bottom:0}
+.sidemenu.cardmenu button:hover{background:#f8fafc}
+.mi{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.miblue{background:#dbeafe}.migreen{background:#dcfce7}.miamber{background:#fef3c7}.mirose{background:#ffe4e6}.migrey{background:#f1f5f9}
+.logoutbtn2{margin-top:auto;width:100%;border:1px solid #fecdd3;background:#fff1f2;color:#be123c;border-radius:14px;padding:12px;font-size:14.5px;font-weight:700}
+.logoutbtn2:hover{filter:brightness(.98)}
+.sidefoot{margin-top:0}
+.msg.me{background:linear-gradient(135deg,#2563eb,#0284c7)}
+.chessscreen{border-radius:28px;border:0;box-shadow:0 24px 60px rgba(30,64,175,.22)}
+@media (max-width:860px){
+  .brand{display:none}
+  .tabsbar{padding:6px 8px;gap:7px}
+  .addtab small,.chesstab small,.engtab small{font-size:12px}
+  .filtercard{grid-template-columns:1fr}
+  .tips{grid-template-columns:1fr}
+  .findhero h2{font-size:23px}
+  .findillus{width:84px;height:84px;font-size:40px;border-radius:26px}
+  .menugroup,.sidemenu.cardmenu,.logoutbtn2{display:none}
+  .sideprofile{background:transparent;border:0;box-shadow:none;padding:0}
+  .profring{width:44px;height:44px;padding:2px}
+  .chips{display:none}
+}
