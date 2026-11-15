@@ -277,6 +277,7 @@ export default function App() {
         {waveNote && <div className="wavenote" onClick={() => setWaveNote("")}>{waveNote}</div>}
 
         <div className="tabsbar">
+          <div className="brand">💬 Stranger<span>Chat</span></div>
           <button className="addtab" title={searching ? "Huỷ tìm" : "Tìm người lạ"} onClick={searching ? cancelSearch : (chats.length < MAX_CHATS ? find : undefined)}>
             <span className="plus">{searching ? "…" : "+"}</span>
             <small>{searching ? "Đang tìm" : chats.length > 0 ? "Tìm thêm" : "Tìm người"}</small>
@@ -333,25 +334,44 @@ export default function App() {
           </>
         ) : (
           <div className="find">
-            <label>Muốn gặp giới tính: <select value={wantGender} onChange={e => setWantGender(e.target.value)}>
-              <option value="all">Tất cả</option><option value="male">Nam</option><option value="female">Nữ</option><option value="other">Khác</option>
-            </select></label>
-            <label>Ưu tiên khu vực: <select value={wantRegion} onChange={e => setWantRegion(e.target.value)}>
-              <option value="all">Tất cả</option>
-              {Object.entries(REGION).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select></label>
-            {searching ? <><p>⏳ Đang tìm người lạ...</p><button onClick={cancelSearch}>Huỷ</button></>
-              : <button className="primary big" onClick={find}>🔍 Tìm người lạ</button>}
+            <div className="findhero">
+              <div className="findillus">👋</div>
+              <h2>Sẵn sàng gặp một người mới?</h2>
+              <p>Chat ẩn danh với người thật đang online. Không cần tên thật, không lưu tin nhắn — rời đi là xoá hết dấu vết.</p>
+              <span className="readypill"><span className="greendot" /> Hệ thống đang sẵn sàng ghép nối</span>
+            </div>
+            <div className="filtercard">
+              <label>Muốn gặp giới tính <select value={wantGender} onChange={e => setWantGender(e.target.value)}>
+                <option value="all">Tất cả</option><option value="male">Nam</option><option value="female">Nữ</option><option value="other">Khác</option>
+              </select></label>
+              <label>Ưu tiên khu vực <select value={wantRegion} onChange={e => setWantRegion(e.target.value)}>
+                <option value="all">Tất cả</option>
+                {Object.entries(REGION).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select></label>
+            </div>
+            {searching ? <><p className="searchingnote">⏳ Đang tìm người lạ...</p><button className="findcta cancel" onClick={cancelSearch}>Huỷ tìm</button></>
+              : <button className="primary big findcta" onClick={find}>🔍 Tìm người lạ ngay</button>}
             {chats.length > 0 && <p>Bạn còn {chats.length} cuộc đã kết thúc ở trên — bấm avatar để xem lại hoặc đóng.</p>}
+            <div className="tips">
+              <div className="tip"><b>🕶️ Ẩn danh thật</b>Chỉ hiện biệt danh bạn chọn, không hiện SĐT hay tên thật.</div>
+              <div className="tip"><b>🔒 Không lưu tin nhắn</b>Tin nhắn không lưu trên máy chủ, đóng chat là biến mất.</div>
+              <div className="tip"><b>🚩 An toàn 2 chạm</b>Thấy người xấu? Báo xấu / thoát ngay, không bị ghép lại.</div>
+            </div>
           </div>
         )}
       </main>
 
       <aside className="sidecol">
         <div className="sideprofile">
-          <img className="avatar lg" src={profile.avatar} alt="" />
+          <div className="profring"><img className="avatar lg" src={profile.avatar} alt="" /></div>
           <b>{profile.name}{profile.isGuest && !profile.name.startsWith("Khách") ? " (Khách)" : ""}</b>
-          <span>{GENDER[profile.gender]} · {THIS_YEAR - profile.birthYear} tuổi · {REGION[profile.region]}{profile.location ? ` · 📍 ${profile.location}` : ""}</span>
+          <div className="chips">
+            <span className="chip">{profile.isGuest ? "Khách" : "Thành viên"}</span>
+            <span className="chip grey">{THIS_YEAR - profile.birthYear} tuổi</span>
+            <span className="chip grey">{REGION[profile.region]}</span>
+            <span className="chip grey">{GENDER[profile.gender]}</span>
+          </div>
+          {profile.location && <span>📍 {profile.location}</span>}
         </div>
 
         <div>
@@ -376,15 +396,21 @@ export default function App() {
           )}
         </div>
 
-        <nav className="sidemenu">
-          <button onClick={() => setShowChess(true)}>♟️ Cờ vua</button>
-          <button onClick={() => setShowEnglish(true)}>🎧 Học tiếng Anh</button>
-          <button onClick={() => setProfile(null)}>✏️ Chỉnh sửa hồ sơ</button>
-          <button disabled={!active || active.ended} onClick={() => active && nextChat(active.id)}>⏭ Người tiếp theo</button>
-          <button disabled={!active} onClick={() => active && report(active.id)}>🚩 Báo xấu</button>
-          <button disabled={!active} onClick={() => active && closeChat(active.id)}>✖ Thoát trò chuyện</button>
-          <button onClick={logout}>🚪 Đăng xuất</button>
+        <div className="menugroup">Khám phá</div>
+        <nav className="sidemenu cardmenu">
+          <button onClick={() => setShowChess(true)}><span className="mi miblue">♟️</span> Cờ vua</button>
+          <button onClick={() => setShowEnglish(true)}><span className="mi migreen">🎧</span> Học tiếng Anh</button>
+          <button onClick={() => setProfile(null)}><span className="mi miamber">✏️</span> Chỉnh sửa hồ sơ</button>
         </nav>
+
+        <div className="menugroup">Trong cuộc trò chuyện</div>
+        <nav className="sidemenu cardmenu">
+          <button disabled={!active || active.ended} onClick={() => active && nextChat(active.id)}><span className="mi migrey">⏭</span> Người tiếp theo</button>
+          <button disabled={!active} onClick={() => active && report(active.id)}><span className="mi mirose">🚩</span> Báo xấu</button>
+          <button disabled={!active} onClick={() => active && closeChat(active.id)}><span className="mi migrey">✖</span> Thoát trò chuyện</button>
+        </nav>
+
+        <button className="logoutbtn2" onClick={logout}>Đăng xuất</button>
 
         <div className="sidefoot">
           <a href="/privacy.html" target="_blank" rel="noreferrer">Chính sách riêng tư</a> · Chỉ dành cho người 18+<br />
