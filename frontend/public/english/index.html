@@ -161,6 +161,39 @@
       }
       .next-btn:hover { filter: brightness(1.08); }
 
+      /* ---------- auto play ---------- */
+      .auto-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .auto-btn {
+        flex: 1;
+        background: var(--blue-dark);
+        color: #fff;
+        border: 0;
+        border-radius: 12px;
+        padding: 13px 18px;
+        font-size: 16.5px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .auto-btn:hover { background: #2a78f6; }
+      .auto-btn.is-running { background: var(--red); }
+      .auto-btn.is-running:hover { filter: brightness(1.08); }
+      .auto-status {
+        font-size: 14px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .auto-status:empty { display: none; }
+      .auto-status.on { color: var(--green); font-weight: 650; }
+      .opt.auto-pick { box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.45); }
+
       /* ---------- summary ---------- */
       .summary {
         background: var(--panel);
@@ -197,6 +230,11 @@
           <span id="quizScore">Điểm: 0</span>
         </div>
         <div class="bar"><i id="quizBarFill"></i></div>
+
+        <div class="auto-row">
+          <button class="auto-btn" id="autoBtn" type="button">▶&nbsp; Tự động làm bài</button>
+          <span class="auto-status" id="autoStatus"></span>
+        </div>
 
         <div class="q-box">
           <span class="q-label">Từ này trong tiếng Anh là gì?</span>
@@ -262,6 +300,8 @@
       }
 
       var quiz = null; // { questions: [{item, options}], i, score, answered }
+      var autoOn = false;
+      var autoTimer = null;
 
       function startQuiz() {
         var questions = shuffleArr(WORDS).slice(0, Math.min(ROUND, WORDS.length)).map(function (item) {
@@ -295,7 +335,7 @@
           b.innerHTML = '<span class="letter">' + letters[k] + '</span>' +
             '<span class="opt-main"><span class="opt-en">' + esc(opt.en) + '</span>' +
             '<span class="opt-ipa">' + esc(opt.ipa) + "</span></span>";
-          b.addEventListener("click", function () { answer(b, opt); });
+          b.addEventListener("click", function () { if (autoOn) stopAuto(); answer(b, opt); });
           box.appendChild(b);
         });
       }
@@ -326,7 +366,7 @@
         var nb = $("quizNextBtn");
         nb.textContent = quiz.i === quiz.questions.length - 1 ? "Xem kết quả" : "Câu tiếp theo";
         nb.classList.remove("hidden");
-        nb.focus();
+        if (!autoOn) nb.focus();
       }
 
       function next() {
@@ -339,7 +379,72 @@
         }
       }
 
+      /* ---------- Tự động làm bài ---------- */
+      function updateAutoUI() {
+        var b = $("autoBtn");
+        var s = $("autoStatus");
+        if (b) {
+          b.innerHTML = autoOn ? "■&nbsp; Dừng tự động" : "▶&nbsp; Tự động làm bài";
+          b.classList.toggle("is-running", autoOn);
+        }
+        if (s) {
+          s.textContent = autoOn ? "Đang tự làm…" : "";
+          s.classList.toggle("on", autoOn);
+        }
+      }
+      function stopAuto() {
+        autoOn = false;
+        if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+        updateAutoUI();
+      }
+      function scheduleAuto(ms) {
+        if (autoTimer) clearTimeout(autoTimer);
+        autoTimer = setTimeout(autoStep, ms);
+      }
+      function startAuto() {
+        if (autoOn) return;
+        // Đang ở màn kết quả thì bắt đầu lượt mới rồi tự làm luôn
+        if (!$("quizSummary").classList.contains("hidden")) {
+          autoOn = true;
+          updateAutoUI();
+          startQuiz();
+          scheduleAuto(650);
+          return;
+        }
+        autoOn = true;
+        updateAutoUI();
+        scheduleAuto(600);
+      }
+      function autoStep() {
+        if (!autoOn) return;
+        if (!$("quizSummary").classList.contains("hidden")) { stopAuto(); return; }
+        if (!quiz) { stopAuto(); return; }
+        if (!quiz.answered) {
+          var q = quiz.questions[quiz.i];
+          var buttons = $("quizOpts").children;
+          for (var k = 0; k < buttons.length; k++) {
+            if (q.options[k].en === q.item.en) {
+              buttons[k].classList.add("auto-pick");
+              answer(buttons[k], q.options[k]);
+              break;
+            }
+          }
+          if (!autoOn) return;
+          scheduleAuto(1050);
+        } else {
+          var isLast = quiz.i === quiz.questions.length - 1;
+          next();
+          if (isLast) { stopAuto(); return; }
+          scheduleAuto(650);
+        }
+      }
+      function toggleAuto() {
+        if (autoOn) stopAuto();
+        else startAuto();
+      }
+
       function showSummary() {
+        stopAuto();
         $("quizMain").classList.add("hidden");
         var box = $("quizSummary");
         box.classList.remove("hidden");
@@ -353,13 +458,18 @@
           '<div class="summary">' +
           "<h2>" + quiz.score + " / " + total + " câu đúng</h2>" +
           "<p>" + msg + "</p>" +
+          '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
           '<button class="again-btn" id="againBtn" type="button">Làm lượt mới</button>' +
+          '<button class="again-btn" id="autoAgainBtn" type="button" style="background:var(--panel-2);border:1.5px solid var(--line)">▶ Tự động làm lượt mới</button>' +
+          "</div>" +
           "</div>";
-        $("againBtn").addEventListener("click", startQuiz);
+        $("againBtn").addEventListener("click", function () { stopAuto(); startQuiz(); });
+        $("autoAgainBtn").addEventListener("click", function () { startAuto(); });
         $("againBtn").focus();
       }
 
-      $("quizNextBtn").addEventListener("click", next);
+      $("quizNextBtn").addEventListener("click", function () { if (autoOn) stopAuto(); next(); });
+      $("autoBtn").addEventListener("click", toggleAuto);
       startQuiz();
     </script>
   </body>
